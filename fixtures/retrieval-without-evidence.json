@@ -1,0 +1,55 @@
+{
+  "trace_id": "sample-retrieval-without-evidence",
+  "project_id": "mock-office",
+  "agent_name": "OfficeTaskAgent",
+  "started_at": "2026-11-24T15:00:00.000Z",
+  "ended_at": "2026-11-24T15:00:22.000Z",
+  "status": "success",
+  "task": {
+    "instruction": "스프레드시트에서 이번 달 매출 이상치를 찾아 근거와 함께 요약한다.",
+    "success_criteria": ["실제 시트 데이터를 조회한다", "이상치를 찾는다", "근거를 포함해 요약한다"],
+    "environment": { "apps": ["spreadsheet"], "locale": "ko-KR" }
+  },
+  "evaluation": {
+    "verdict": "pass",
+    "score": 1,
+    "evaluator_comment": "최종 응답에 이상치처럼 보이는 숫자가 포함됐습니다."
+  },
+  "spans": [
+    {
+      "span_id": "root",
+      "type": "agent",
+      "name": "OfficeTaskAgent 실행",
+      "started_at": "2026-11-24T15:00:00.000Z",
+      "ended_at": "2026-11-24T15:00:22.000Z",
+      "status": "ok"
+    },
+    {
+      "span_id": "guess-analysis-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "데이터 없이 이상치 추정",
+      "started_at": "2026-11-24T15:00:02.000Z",
+      "ended_at": "2026-11-24T15:00:12.000Z",
+      "status": "ok",
+      "input": "스프레드시트에서 이번 달 매출 이상치를 찾아 근거와 함께 요약한다.",
+      "output": "아마도 11월 5일 제품 C 매출이 이상치일 가능성이 높습니다.",
+      "usage": { "input_tokens": 130, "output_tokens": 70, "cost_usd": 0.0016 }
+    },
+    {
+      "span_id": "final-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "최종 응답 생성",
+      "started_at": "2026-11-24T15:00:13.000Z",
+      "ended_at": "2026-11-24T15:00:22.000Z",
+      "status": "ok",
+      "output": "이번 달 매출 이상치는 11월 5일 제품 C의 1,820,000원입니다. 다른 날보다 훨씬 높습니다.",
+      "usage": { "input_tokens": 180, "output_tokens": 58, "cost_usd": 0.0019 }
+    }
+  ],
+  "metadata": {
+    "fixture_kind": "data_retrieval",
+    "description": "spreadsheet 조회 없이 모델 추측으로 사실형 답변을 생성한 사례"
+  }
+}

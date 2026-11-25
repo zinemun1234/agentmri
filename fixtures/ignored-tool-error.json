@@ -1,0 +1,65 @@
+{
+  "trace_id": "sample-ignored-tool-error",
+  "project_id": "mock-office",
+  "agent_name": "OfficeTaskAgent",
+  "started_at": "2026-11-24T16:00:00.000Z",
+  "ended_at": "2026-11-24T16:00:24.000Z",
+  "status": "failure",
+  "task": {
+    "instruction": "매출 요약을 reports/summary.md 파일로 저장한다.",
+    "success_criteria": ["파일을 생성한다", "파일 생성 여부를 확인한다"],
+    "environment": { "apps": ["files"], "locale": "ko-KR" }
+  },
+  "evaluation": {
+    "verdict": "fail",
+    "score": 0,
+    "evaluator_comment": "reports/summary.md 파일이 존재하지 않습니다."
+  },
+  "spans": [
+    {
+      "span_id": "root",
+      "type": "agent",
+      "name": "OfficeTaskAgent 실행",
+      "started_at": "2026-11-24T16:00:00.000Z",
+      "ended_at": "2026-11-24T16:00:24.000Z",
+      "status": "error"
+    },
+    {
+      "span_id": "draft-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "요약 초안 작성",
+      "started_at": "2026-11-24T16:00:02.000Z",
+      "ended_at": "2026-11-24T16:00:08.000Z",
+      "status": "ok",
+      "output": "이번 달 매출은 전월 대비 증가했습니다.",
+      "usage": { "input_tokens": 100, "output_tokens": 34, "cost_usd": 0.0008 }
+    },
+    {
+      "span_id": "write-1",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "files.write",
+      "started_at": "2026-11-24T16:00:09.000Z",
+      "ended_at": "2026-11-24T16:00:14.000Z",
+      "status": "error",
+      "input": { "path": "reports/summary.md", "content": "이번 달 매출은 전월 대비 증가했습니다." },
+      "error": { "type": "PermissionDenied", "message": "reports 디렉터리에 쓰기 권한이 없습니다." }
+    },
+    {
+      "span_id": "final-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "최종 응답 생성",
+      "started_at": "2026-11-24T16:00:15.000Z",
+      "ended_at": "2026-11-24T16:00:24.000Z",
+      "status": "ok",
+      "output": "파일 생성에 실패했습니다.",
+      "usage": { "input_tokens": 140, "output_tokens": 22, "cost_usd": 0.001 }
+    }
+  ],
+  "metadata": {
+    "fixture_kind": "verification_feedback",
+    "description": "files.write 오류 후 재시도나 원인 분석 없이 종료한 사례"
+  }
+}

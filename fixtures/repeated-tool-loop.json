@@ -1,0 +1,129 @@
+{
+  "trace_id": "sample-repeated-tool-loop",
+  "project_id": "mock-office",
+  "agent_name": "OfficeTaskAgent",
+  "started_at": "2026-11-24T10:00:00.000Z",
+  "ended_at": "2026-11-24T10:03:14.000Z",
+  "status": "failure",
+  "task": {
+    "instruction": "스프레드시트에서 이번 달 매출 합계를 찾아 보고서 파일에 요약한다.",
+    "success_criteria": [
+      "매출 합계를 찾는다",
+      "보고서 파일을 생성한다",
+      "파일 생성 결과를 확인한다"
+    ],
+    "forbidden_actions": ["원본 스프레드시트 수정"],
+    "environment": {
+      "apps": ["spreadsheet", "files"],
+      "locale": "ko-KR"
+    }
+  },
+  "evaluation": {
+    "verdict": "fail",
+    "score": 0,
+    "evaluator_comment": "보고서 파일이 생성되지 않았습니다."
+  },
+  "spans": [
+    {
+      "span_id": "root",
+      "type": "agent",
+      "name": "OfficeTaskAgent 실행",
+      "started_at": "2026-11-24T10:00:00.000Z",
+      "ended_at": "2026-11-24T10:03:14.000Z",
+      "status": "error"
+    },
+    {
+      "span_id": "plan-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "작업 계획 생성",
+      "started_at": "2026-11-24T10:00:01.000Z",
+      "ended_at": "2026-11-24T10:00:05.000Z",
+      "status": "ok",
+      "output": "1. 스프레드시트 범위 조회 2. 매출 합계 계산 3. 보고서 작성",
+      "usage": { "input_tokens": 160, "output_tokens": 58, "cost_usd": 0.0016 }
+    },
+    {
+      "span_id": "sheet-read-1",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T10:00:06.000Z",
+      "ended_at": "2026-11-24T10:00:22.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D200" },
+      "output": { "rows": 200, "truncated": true }
+    },
+    {
+      "span_id": "sheet-read-2",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T10:00:24.000Z",
+      "ended_at": "2026-11-24T10:00:41.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D200" },
+      "output": { "rows": 200, "truncated": true }
+    },
+    {
+      "span_id": "sheet-read-3",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T10:00:43.000Z",
+      "ended_at": "2026-11-24T10:01:03.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D200" },
+      "output": { "rows": 200, "truncated": true }
+    },
+    {
+      "span_id": "sheet-read-4",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T10:01:05.000Z",
+      "ended_at": "2026-11-24T10:01:28.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D200" },
+      "output": { "rows": 200, "truncated": true }
+    },
+    {
+      "span_id": "llm-loop-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "다음 행동 선택",
+      "started_at": "2026-11-24T10:01:29.000Z",
+      "ended_at": "2026-11-24T10:01:36.000Z",
+      "status": "ok",
+      "input": "같은 범위를 여러 번 읽었지만 합계를 계산하지 못했습니다.",
+      "output": "범위를 다시 확인해야 합니다.",
+      "usage": { "input_tokens": 940, "output_tokens": 39, "cost_usd": 0.0082 }
+    },
+    {
+      "span_id": "sheet-read-5",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T10:01:37.000Z",
+      "ended_at": "2026-11-24T10:01:58.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D200" },
+      "output": { "rows": 200, "truncated": true }
+    },
+    {
+      "span_id": "final-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "최종 응답 생성",
+      "started_at": "2026-11-24T10:02:59.000Z",
+      "ended_at": "2026-11-24T10:03:14.000Z",
+      "status": "ok",
+      "output": "데이터를 확인했지만 보고서를 생성하지 못했습니다.",
+      "usage": { "input_tokens": 1200, "output_tokens": 45, "cost_usd": 0.0114 }
+    }
+  ],
+  "metadata": {
+    "fixture_kind": "agent_failure",
+    "description": "같은 spreadsheet.get_range 호출이 반복되는 비용/루프 실패 사례"
+  }
+}

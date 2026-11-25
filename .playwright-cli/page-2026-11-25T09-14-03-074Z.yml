@@ -1,0 +1,262 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - paragraph [ref=e5]: AgentMRI MVP
+        - heading "에이전트 실행과 평가를 감사하는 Trace Explorer" [level=1] [ref=e6]
+        - paragraph [ref=e7]: 실행 로그를 구조화하고, 규칙 기반 detector로 위험 신호를 찾고, PASS/FAIL 판정이 evidence와 맞는지 확인합니다.
+      - generic [ref=e8]:
+        - generic [ref=e9]: 현재 trace
+        - strong [ref=e10]: sample-failure-calendar-wrong-time
+        - generic [ref=e11]: 잘못된 회의 시간
+    - generic [ref=e12]:
+      - generic "sample traces" [ref=e13]:
+        - button "성공 실행" [ref=e14] [cursor=pointer]
+        - button "잘못된 회의 시간" [ref=e15] [cursor=pointer]
+        - button "반복 루프 실패" [ref=e16] [cursor=pointer]
+        - button "채점 오류 의심" [ref=e17] [cursor=pointer]
+        - button "비용 급증" [ref=e18] [cursor=pointer]
+        - button "외부 행동 미검증" [ref=e19] [cursor=pointer]
+        - button "근거 없는 주장" [ref=e20] [cursor=pointer]
+        - button "도구 오류 무시" [ref=e21] [cursor=pointer]
+      - generic [ref=e22] [cursor=pointer]:
+        - text: JSON 파일 업로드
+        - button "JSON 파일 업로드" [ref=e23]
+      - group [ref=e24]:
+        - generic "JSON 붙여넣기" [ref=e25] [cursor=pointer]
+    - region "Trace summary" [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]: status
+        - strong [ref=e29]: failure
+      - generic [ref=e30]:
+        - generic [ref=e31]: spans
+        - strong [ref=e32]: "7"
+      - generic [ref=e33]:
+        - generic [ref=e34]: tool calls
+        - strong [ref=e35]: "2"
+      - generic [ref=e36]:
+        - generic [ref=e37]: errors
+        - strong [ref=e38]: "1"
+      - generic [ref=e39]:
+        - generic [ref=e40]: duration
+        - strong [ref=e41]: 45.0s
+      - generic [ref=e42]:
+        - generic [ref=e43]: cost
+        - strong [ref=e44]: $0.0050
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]: 원래 평가
+        - strong [ref=e48]: fail
+        - emphasis [ref=e49]: score 0
+      - paragraph [ref=e50]: 캘린더 이벤트는 생성됐지만 시작 시간이 성공 조건인 14:00 KST와 다릅니다.
+    - region "Verdict audit report" [ref=e51]:
+      - generic [ref=e52]:
+        - heading "Verdict Audit" [level=2] [ref=e53]
+        - generic [ref=e54]: evidence 3개 확인
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: 감사 결과
+          - strong [ref=e58]: FAIL 신뢰 가능
+          - code [ref=e59]: true_failure
+        - generic [ref=e60]:
+          - generic [ref=e61]: 원래 판정
+          - strong [ref=e62]: fail
+        - generic [ref=e63]:
+          - generic [ref=e64]: 원래 판정 신뢰도
+          - strong [ref=e65]: high
+        - generic [ref=e66]:
+          - generic [ref=e67]: 감사 confidence
+          - strong [ref=e68]: high
+        - generic [ref=e295]:
+          - generic [ref=e296]: 실패 분류
+          - strong [ref=e297]: 검증/피드백 오류
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - heading "판단 근거" [level=3] [ref=e71]
+          - paragraph [ref=e72]: 원래 FAIL 판정과 trace evidence가 대체로 일치합니다. 실패 원인은 finding evidence와 오류 span을 중심으로 확인해야 합니다.
+        - group [ref=e73]:
+          - generic "감사에 사용한 신호 보기" [ref=e74] [cursor=pointer]
+        - generic [ref=e75]:
+          - heading "추천 회귀 테스트" [level=3] [ref=e76]
+          - list [ref=e77]:
+            - listitem [ref=e298]: 가장 먼저 발생한 high severity finding을 최소 재현 테스트로 변환합니다.
+            - listitem [ref=e299]: 같은 실패가 수정 후 사라졌는지 성공/실패 trace 비교로 확인합니다.
+        - generic [ref=e79]:
+          - heading "Evidence" [level=3] [ref=e80]
+          - generic [ref=e81]:
+            - 'button "evidence: verify-calendar-1" [ref=e82] [cursor=pointer]'
+            - 'button "evidence: final-1" [ref=e83] [cursor=pointer]'
+            - 'button "evidence: root" [ref=e84] [cursor=pointer]'
+    - region "Trace compare" [ref=e85]:
+      - generic [ref=e86]:
+        - heading "Trace Compare" [level=2] [ref=e87]
+        - generic [ref=e88]: 4 divergent steps
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - text: baseline
+          - combobox "baseline" [ref=e91]:
+            - option "성공 실행" [selected]
+            - option "잘못된 회의 시간"
+            - option "반복 루프 실패"
+            - option "채점 오류 의심"
+            - option "비용 급증"
+            - option "외부 행동 미검증"
+            - option "근거 없는 주장"
+            - option "도구 오류 무시"
+        - generic [ref=e92]:
+          - text: candidate
+          - combobox "candidate" [ref=e93]:
+            - option "성공 실행"
+            - option "잘못된 회의 시간" [selected]
+            - option "반복 루프 실패"
+            - option "채점 오류 의심"
+            - option "비용 급증"
+            - option "외부 행동 미검증"
+            - option "근거 없는 주장"
+            - option "도구 오류 무시"
+      - generic "comparison metrics" [ref=e94]:
+        - generic [ref=e95]:
+          - generic [ref=e96]: duration
+          - strong [ref=e97]: 42.0s → 45.0s
+          - generic [ref=e98]: +3.0s
+        - generic [ref=e99]:
+          - generic [ref=e100]: cost
+          - strong [ref=e101]: $0.0050 → $0.0050
+          - generic [ref=e102]: $0.0000
+        - generic [ref=e103]:
+          - generic [ref=e104]: tool calls
+          - strong [ref=e105]: 2 → 2
+          - generic [ref=e106]: "0"
+        - generic [ref=e107]:
+          - generic [ref=e108]: errors
+          - strong [ref=e109]: 0 → 1
+          - generic [ref=e110]: "+1"
+      - generic [ref=e111]:
+        - generic [ref=e112]: first divergence 후보
+        - strong [ref=e113]: 같은 step(llm:회의 시간 추출)에서 output 값이 갈라졌습니다.
+        - generic [ref=e114]:
+          - button "baseline step 열기" [ref=e115] [cursor=pointer]
+          - button "candidate step 열기" [active] [ref=e116] [cursor=pointer]
+      - table "step alignment" [ref=e117]:
+        - row "# baseline candidate status" [ref=e118]:
+          - generic [ref=e119]: "#"
+          - generic [ref=e120]: baseline
+          - generic [ref=e121]: candidate
+          - generic [ref=e122]: status
+        - row "1 agent:OfficeTaskAgent 실행 agent:OfficeTaskAgent 실행 same" [ref=e123]:
+          - generic [ref=e124]: "1"
+          - button "agent:OfficeTaskAgent 실행" [ref=e126] [cursor=pointer]
+          - button "agent:OfficeTaskAgent 실행" [ref=e128] [cursor=pointer]
+          - strong [ref=e130]: same
+        - row "2 llm:작업 계획 생성 llm:작업 계획 생성 same" [ref=e131]:
+          - generic [ref=e132]: "2"
+          - button "llm:작업 계획 생성" [ref=e134] [cursor=pointer]
+          - button "llm:작업 계획 생성" [ref=e136] [cursor=pointer]
+          - strong [ref=e138]: same
+        - row "3 tool:mail.search tool:mail.search same" [ref=e139]:
+          - generic [ref=e140]: "3"
+          - button "tool:mail.search" [ref=e142] [cursor=pointer]
+          - button "tool:mail.search" [ref=e144] [cursor=pointer]
+          - strong [ref=e146]: same
+        - row "4 llm:회의 시간 추출 llm:회의 시간 추출 changed output" [ref=e147]:
+          - generic [ref=e148]: "4"
+          - button "llm:회의 시간 추출" [ref=e150] [cursor=pointer]
+          - button "llm:회의 시간 추출" [ref=e152] [cursor=pointer]
+          - generic [ref=e153]:
+            - strong [ref=e154]: changed
+            - generic [ref=e155]: output
+        - row "5 tool:calendar.create_event tool:calendar.create_event changed input, output" [ref=e156]:
+          - generic [ref=e157]: "5"
+          - button "tool:calendar.create_event" [ref=e159] [cursor=pointer]
+          - button "tool:calendar.create_event" [ref=e161] [cursor=pointer]
+          - generic [ref=e162]:
+            - strong [ref=e163]: changed
+            - generic [ref=e164]: input, output
+        - row "6 verification:생성된 일정 확인 verification:생성된 일정 확인 changed status, input, output, error" [ref=e165]:
+          - generic [ref=e166]: "6"
+          - button "verification:생성된 일정 확인" [ref=e168] [cursor=pointer]
+          - button "verification:생성된 일정 확인" [ref=e170] [cursor=pointer]
+          - generic [ref=e171]:
+            - strong [ref=e172]: changed
+            - generic [ref=e173]: status, input, output, error
+        - row "7 llm:최종 응답 생성 llm:최종 응답 생성 changed output" [ref=e174]:
+          - generic [ref=e175]: "7"
+          - button "llm:최종 응답 생성" [ref=e177] [cursor=pointer]
+          - button "llm:최종 응답 생성" [ref=e179] [cursor=pointer]
+          - generic [ref=e180]:
+            - strong [ref=e181]: changed
+            - generic [ref=e182]: output
+    - generic [ref=e183]:
+      - region "Span tree" [ref=e184]:
+        - generic [ref=e185]:
+          - heading "Span Tree" [level=2] [ref=e186]
+          - generic [ref=e187]: 7 spans
+        - generic [ref=e189]:
+          - button "OfficeTaskAgent 실행" [ref=e190] [cursor=pointer]
+          - button "작업 계획 생성" [ref=e194] [cursor=pointer]
+          - button "mail.search" [ref=e198] [cursor=pointer]
+          - button "회의 시간 추출" [ref=e202] [cursor=pointer]
+          - button "calendar.create_event" [ref=e206] [cursor=pointer]
+          - button "생성된 일정 확인" [ref=e210] [cursor=pointer]
+          - button "최종 응답 생성" [ref=e214] [cursor=pointer]
+      - generic [ref=e217]:
+        - region "Timeline" [ref=e218]:
+          - generic [ref=e219]:
+            - heading "Timeline" [level=2] [ref=e220]
+            - generic [ref=e221]: 42.0s
+          - generic [ref=e222]:
+            - button "OfficeTaskAgent 실행 42.0s" [ref=e223] [cursor=pointer]:
+              - generic "OfficeTaskAgent 실행" [ref=e224]
+              - generic [ref=e227]: 42.0s
+            - button "작업 계획 생성 3.0s" [ref=e228] [cursor=pointer]:
+              - generic "작업 계획 생성" [ref=e229]
+              - generic [ref=e232]: 3.0s
+            - button "mail.search 5.0s" [ref=e233] [cursor=pointer]:
+              - generic "mail.search" [ref=e234]
+              - generic [ref=e237]: 5.0s
+            - button "회의 시간 추출 4.0s" [ref=e238] [cursor=pointer]:
+              - generic "회의 시간 추출" [ref=e239]
+              - generic [ref=e242]: 4.0s
+            - button "calendar.create_event 11.0s" [ref=e243] [cursor=pointer]:
+              - generic "calendar.create_event" [ref=e244]
+              - generic [ref=e247]: 11.0s
+            - button "생성된 일정 확인 8.0s" [ref=e248] [cursor=pointer]:
+              - generic "생성된 일정 확인" [ref=e249]
+              - generic [ref=e252]: 8.0s
+            - button "최종 응답 생성 5.0s" [ref=e253] [cursor=pointer]:
+              - generic "최종 응답 생성" [ref=e254]
+              - generic [ref=e257]: 5.0s
+        - region "Findings" [ref=e258]:
+          - generic [ref=e259]:
+            - heading "Findings" [level=2] [ref=e260]
+            - generic [ref=e261]: 0건
+          - paragraph [ref=e263]: 현재 detector가 발견한 위험 신호가 없습니다.
+      - region "Span detail" [ref=e264]:
+        - generic [ref=e265]:
+          - heading "Span Detail" [level=2] [ref=e266]
+          - generic [ref=e267]: ok
+        - generic [ref=e268]:
+          - generic [ref=e269]:
+            - strong [ref=e270]: 회의 시간 추출
+            - code [ref=e271]: extract-time-1
+          - generic [ref=e272]:
+            - generic [ref=e273]:
+              - term [ref=e274]: type
+              - definition [ref=e275]: llm
+            - generic [ref=e276]:
+              - term [ref=e277]: started
+              - definition [ref=e278]: 18:10:11 KST
+            - generic [ref=e279]:
+              - term [ref=e280]: ended
+              - definition [ref=e281]: 18:10:15 KST
+            - generic [ref=e282]:
+              - term [ref=e283]: cost
+              - definition [ref=e284]: $0.0011
+          - generic [ref=e300]:
+            - heading "input" [level=3] [ref=e301]
+            - generic [ref=e302]: 회의는 11월 26일 오후 2시에 시작합니다.
+          - generic [ref=e303]:
+            - heading "output" [level=3] [ref=e304]
+            - generic [ref=e305]: "{ \"start\": \"2026-11-26T15:00:00+09:00\", \"confidence\": \"medium\" }"
+  - button "Open Next.js Dev Tools" [ref=e290] [cursor=pointer]
+  - alert [ref=e294]

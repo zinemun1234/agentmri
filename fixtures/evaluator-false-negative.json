@@ -1,0 +1,111 @@
+{
+  "trace_id": "sample-evaluator-false-negative",
+  "project_id": "mock-office",
+  "agent_name": "OfficeTaskAgent",
+  "started_at": "2026-11-24T11:00:00.000Z",
+  "ended_at": "2026-11-24T11:00:37.000Z",
+  "status": "success",
+  "task": {
+    "instruction": "스프레드시트에서 매출 이상치를 찾아 보고서 파일을 만든다.",
+    "success_criteria": [
+      "이상치 행을 찾는다",
+      "보고서 파일을 생성한다",
+      "파일 내용이 이상치 근거를 포함한다"
+    ],
+    "environment": {
+      "apps": ["spreadsheet", "files"],
+      "locale": "ko-KR"
+    }
+  },
+  "evaluation": {
+    "verdict": "fail",
+    "score": 0,
+    "evaluator_comment": "평가기는 #report-submit-complete selector를 찾지 못해 FAIL로 판정했습니다."
+  },
+  "spans": [
+    {
+      "span_id": "root",
+      "type": "agent",
+      "name": "OfficeTaskAgent 실행",
+      "started_at": "2026-11-24T11:00:00.000Z",
+      "ended_at": "2026-11-24T11:00:37.000Z",
+      "status": "ok"
+    },
+    {
+      "span_id": "sheet-read-1",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T11:00:02.000Z",
+      "ended_at": "2026-11-24T11:00:11.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D80" },
+      "output": {
+        "rows": [
+          ["date", "product", "amount", "owner"],
+          ["2026-11-03", "A", 120000, "kim"],
+          ["2026-11-04", "B", 98000, "lee"],
+          ["2026-11-05", "C", 1820000, "park"]
+        ]
+      }
+    },
+    {
+      "span_id": "analyze-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "이상치 분석",
+      "started_at": "2026-11-24T11:00:12.000Z",
+      "ended_at": "2026-11-24T11:00:16.000Z",
+      "status": "ok",
+      "input": "2026-11-05 제품 C 금액 1820000",
+      "output": {
+        "outlier": { "date": "2026-11-05", "product": "C", "amount": 1820000 },
+        "reason": "다른 행보다 한 자리수 이상 큼"
+      },
+      "usage": { "input_tokens": 240, "output_tokens": 70, "cost_usd": 0.0026 }
+    },
+    {
+      "span_id": "file-write-1",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "files.write",
+      "started_at": "2026-11-24T11:00:17.000Z",
+      "ended_at": "2026-11-24T11:00:25.000Z",
+      "status": "ok",
+      "input": {
+        "path": "reports/outlier.md",
+        "content": "이상치: 2026-11-05 제품 C 1,820,000원. 다른 행보다 한 자리수 이상 큽니다."
+      },
+      "output": { "created": true, "path": "reports/outlier.md" }
+    },
+    {
+      "span_id": "verify-file-1",
+      "parent_span_id": "root",
+      "type": "verification",
+      "name": "파일 내용 확인",
+      "started_at": "2026-11-24T11:00:26.000Z",
+      "ended_at": "2026-11-24T11:00:31.000Z",
+      "status": "ok",
+      "input": { "path": "reports/outlier.md" },
+      "output": {
+        "exists": true,
+        "contains": ["2026-11-05", "제품 C", "1,820,000원"]
+      }
+    },
+    {
+      "span_id": "final-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "최종 응답 생성",
+      "started_at": "2026-11-24T11:00:32.000Z",
+      "ended_at": "2026-11-24T11:00:37.000Z",
+      "status": "ok",
+      "output": "reports/outlier.md에 매출 이상치 보고서를 생성하고 내용을 확인했습니다.",
+      "usage": { "input_tokens": 190, "output_tokens": 42, "cost_usd": 0.0017 }
+    }
+  ],
+  "metadata": {
+    "fixture_kind": "evaluator_false_negative",
+    "description": "최종 상태는 성공이지만 평가기가 selector 기대값 때문에 FAIL로 판정한 사례"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "trace_id": "sample-cost-spike",
+  "project_id": "mock-office",
+  "agent_name": "OfficeTaskAgent",
+  "started_at": "2026-11-24T13:00:00.000Z",
+  "ended_at": "2026-11-24T13:01:02.000Z",
+  "status": "success",
+  "task": {
+    "instruction": "스프레드시트에서 이번 달 매출 추이를 분석해 짧은 보고서를 작성한다.",
+    "success_criteria": ["매출 추이를 분석한다", "보고서 파일을 생성한다", "파일 생성을 확인한다"],
+    "environment": { "apps": ["spreadsheet", "files"], "locale": "ko-KR" }
+  },
+  "evaluation": {
+    "verdict": "pass",
+    "score": 1,
+    "evaluator_comment": "보고서 파일이 생성되고 내용이 확인됐습니다."
+  },
+  "spans": [
+    {
+      "span_id": "root",
+      "type": "agent",
+      "name": "OfficeTaskAgent 실행",
+      "started_at": "2026-11-24T13:00:00.000Z",
+      "ended_at": "2026-11-24T13:01:02.000Z",
+      "status": "ok"
+    },
+    {
+      "span_id": "plan-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "작업 계획 생성",
+      "started_at": "2026-11-24T13:00:01.000Z",
+      "ended_at": "2026-11-24T13:00:04.000Z",
+      "status": "ok",
+      "output": "1. 데이터 조회 2. 추이 분석 3. 보고서 작성 4. 확인",
+      "usage": { "input_tokens": 120, "output_tokens": 42, "cost_usd": 0.001 }
+    },
+    {
+      "span_id": "sheet-read-1",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "spreadsheet.get_range",
+      "started_at": "2026-11-24T13:00:05.000Z",
+      "ended_at": "2026-11-24T13:00:13.000Z",
+      "status": "ok",
+      "input": { "sheet": "11월 매출", "range": "A1:D60" },
+      "output": { "rows": 60, "columns": ["date", "product", "amount", "owner"] }
+    },
+    {
+      "span_id": "analysis-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "긴 컨텍스트 매출 분석",
+      "started_at": "2026-11-24T13:00:14.000Z",
+      "ended_at": "2026-11-24T13:00:39.000Z",
+      "status": "ok",
+      "input": "60개 매출 행과 이전 대화 전체를 포함한 긴 컨텍스트",
+      "output": "매출은 11월 5일에 급증했고 나머지 기간은 비교적 안정적입니다.",
+      "usage": { "input_tokens": 18200, "output_tokens": 420, "cost_usd": 0.028 }
+    },
+    {
+      "span_id": "file-write-1",
+      "parent_span_id": "root",
+      "type": "tool",
+      "name": "files.write",
+      "started_at": "2026-11-24T13:00:40.000Z",
+      "ended_at": "2026-11-24T13:00:48.000Z",
+      "status": "ok",
+      "input": { "path": "reports/sales-trend.md", "content": "11월 5일 매출 급증" },
+      "output": { "created": true, "path": "reports/sales-trend.md" }
+    },
+    {
+      "span_id": "verify-file-1",
+      "parent_span_id": "root",
+      "type": "verification",
+      "name": "보고서 파일 확인",
+      "started_at": "2026-11-24T13:00:49.000Z",
+      "ended_at": "2026-11-24T13:00:55.000Z",
+      "status": "ok",
+      "input": { "path": "reports/sales-trend.md" },
+      "output": { "exists": true, "contains": ["11월 5일", "매출"] }
+    },
+    {
+      "span_id": "final-1",
+      "parent_span_id": "root",
+      "type": "llm",
+      "name": "최종 응답 생성",
+      "started_at": "2026-11-24T13:00:56.000Z",
+      "ended_at": "2026-11-24T13:01:02.000Z",
+      "status": "ok",
+      "output": "매출 추이 보고서를 생성하고 확인했습니다.",
+      "usage": { "input_tokens": 180, "output_tokens": 36, "cost_usd": 0.0012 }
+    }
+  ],
+  "metadata": {
+    "fixture_kind": "cost_latency",
+    "description": "하나의 LLM 분석 span이 다른 span보다 훨씬 높은 비용을 사용하는 사례"
+  }
+}
