@@ -26,3 +26,15 @@ jobs:
           else
             echo "게이트가 정상적으로 차단했습니다"
           fi
+
+      # multi-run flakiness gate — 같은 task의 실행 N개를 묶어 불안정성을 판정한다.
+      # 데모 fixture는 의도적으로 flaky(fail 1/4)라 엄격 기준에서는 차단되는 게 정상이다.
+      - name: multi-run flakiness gate blocks flaky group
+        run: |
+          if npx tsx scripts/agentmri-audit.ts --runs fixtures/multirun/calendar; then
+            echo "flaky 그룹을 놓쳤습니다" && exit 1
+          else
+            echo "flakiness 게이트가 정상적으로 차단했습니다"
+          fi
+      - name: multi-run gate passes with lenient thresholds
+        run: npx tsx scripts/agentmri-audit.ts --runs fixtures/multirun/calendar --min-pass-rate 0.5 --max-flakiness 0.9 --min-pass-pow-k 0.1

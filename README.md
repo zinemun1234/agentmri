@@ -120,7 +120,15 @@ npx tsx scripts/agentmri-audit.ts --candidate run.json
 npx tsx scripts/agentmri-audit.ts --baseline golden.json --candidate run.json
 ```
 
-high/critical detector finding, `evaluator_false_positive/negative_suspected` 재분류, verification 소실이 있으면 exit code 1로 CI를 차단한다. `.github/workflows/agentmri-audit.yml`에 예시 워크플로우가 있다.
+high/critical detector finding, `evaluator_false_positive/negative_suspected` 재분류, verification 소실이 있으면 exit code 1로 CI를 차단한다. audit가 확인한 `true_failure`도 차단 대상이다.
+
+multi-run flakiness 모드 — 같은 task의 실행 여러 개를 디렉터리로 넘기면 task fingerprint로 묶어 불안정성을 판정한다:
+
+```bash
+npx tsx scripts/agentmri-audit.ts --runs traces/calendar-runs/   --min-pass-rate 0.8 --max-flakiness 0.3 --min-pass-pow-k 0.4
+```
+
+pass rate(Wilson 신뢰구간 포함), flakiness score, pass^k 일관성(무편향 추정, k=3 연속 실행 기준)이 임계값을 위반하면 차단한다. pass^k는 초기하 분포 기반 unbiased estimator라 naive `(c/n)^k`보다 보수적이다. `.github/workflows/agentmri-audit.yml`에 예시 워크플로우가 있다.
 
 ### 백엔드 테스트
 
