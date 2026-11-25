@@ -1920,3 +1920,228 @@ button:active {
 }
 .duration-delta.worse { color: var(--fail); }
 .duration-delta.better { color: var(--pass); }
+
+/* ============================================
+   Waterfall 2.0 — ruler, hierarchy, markers, burnup
+   ============================================ */
+.timeline-ruler {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr 64px;
+  gap: 10px;
+  align-items: center;
+  padding: 2px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.ruler-track {
+  position: relative;
+  height: 14px;
+}
+.ruler-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ruler-tick.first { transform: none; }
+.ruler-tick.last { transform: translateX(-100%); }
+.ruler-tick::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  width: 1px;
+  height: 4px;
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.timeline-track {
+  position: relative;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(25% - 1px),
+    rgba(148, 163, 184, 0.09) calc(25% - 1px),
+    rgba(148, 163, 184, 0.09) 25%
+  );
+}
+
+.timeline-bar.hatch {
+  outline: 1px solid var(--fail);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 3px,
+    rgba(248, 113, 113, 0.25) 3px 5px
+  );
+}
+
+.wf-marker {
+  font-style: normal;
+  font-size: 0.66rem;
+  margin-right: 4px;
+}
+.wf-marker.verify { color: var(--pass); }
+.wf-marker.error { color: var(--fail); }
+
+.wf-evidence-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--info);
+  margin-left: 5px;
+  vertical-align: middle;
+  box-shadow: 0 0 4px rgba(96, 165, 250, 0.6);
+}
+
+.timeline-empty {
+  padding: 18px 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.timeline-burnup {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr 64px;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.burnup-label {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  padding-left: 8px;
+}
+.burnup-track {
+  display: block;
+  height: 38px;
+}
+.burnup-svg {
+  width: 100%;
+  height: 38px;
+  display: block;
+}
+.burnup-line {
+  fill: none;
+  stroke: var(--suspect);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.burnup-fill {
+  fill: rgba(251, 191, 36, 0.1);
+  stroke: none;
+}
+
+/* ============================================
+   Alignment Subway Map
+   ============================================ */
+.alignment-map {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+}
+.alignment-head {
+  display: grid;
+  grid-template-columns: 1fr 90px 1fr;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.alignment-lane-title {
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  color: rgba(96, 165, 250, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.alignment-lane-title.right {
+  color: rgba(251, 191, 36, 0.8);
+  text-align: right;
+}
+.alignment-body {
+  display: grid;
+  grid-template-columns: 1fr 90px 1fr;
+  gap: 8px;
+  position: relative;
+}
+.alignment-lane {
+  position: relative;
+}
+.alignment-node {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: rgba(148, 163, 184, 0.07);
+  color: var(--muted);
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.alignment-node.same { opacity: 0.55; }
+.alignment-node.changed {
+  background: rgba(251, 191, 36, 0.13);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: var(--suspect);
+  cursor: pointer;
+}
+.alignment-node.added {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.4);
+  color: #22d3ee;
+  cursor: pointer;
+}
+.alignment-node.removed {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: var(--fail);
+  cursor: pointer;
+}
+.alignment-node.selected {
+  outline: 2px solid rgba(251, 191, 36, 0.7);
+  outline-offset: 1px;
+}
+.alignment-node:hover:not(.same) {
+  filter: brightness(1.25);
+}
+.alignment-zap {
+  font-style: normal;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+.alignment-links {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.alignment-link {
+  fill: none;
+  stroke-width: 1.2;
+}
+.alignment-link.same {
+  stroke: rgba(148, 163, 184, 0.25);
+}
+.alignment-link.changed {
+  stroke: rgba(251, 191, 36, 0.75);
+  stroke-width: 2;
+}
+.alignment-link.added,
+.alignment-link.removed {
+  stroke: rgba(34, 211, 238, 0.5);
+  stroke-dasharray: 3 3;
+}

@@ -288,7 +288,12 @@ export default function TraceExplorer() {
       <div className="explorer-grid">
         <SpanTree trace={trace} selectedSpanId={selectedSpanId} findings={findings} onSelect={setSelectedSpanId} />
         <div className="center-column">
-          <Timeline trace={trace} selectedSpanId={selectedSpanId} onSelect={setSelectedSpanId} />
+          <Timeline
+            trace={trace}
+            selectedSpanId={selectedSpanId}
+            evidenceSpanIds={findings.flatMap((finding) => finding.evidence_span_ids)}
+            onSelect={setSelectedSpanId}
+          />
           <FindingsPanel findings={findings} onSelectSpan={setSelectedSpanId} />
         </div>
         <SpanDetail span={selectedSpan} />

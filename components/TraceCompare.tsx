@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { compareTraces, type ComparisonRow, type ComparisonRowStatus } from '@/lib/compare';
+import { compareTraces, type TraceComparison, type ComparisonRow, type ComparisonRowStatus } from '@/lib/compare';
 import { IconBolt, IconChain, IconDiff, IconFlask } from './icons';
 import { semanticDifferences, type FieldDifference } from '@/lib/compare/diff';
 import { buildRegressionCandidate } from '@/lib/regression';
@@ -69,6 +69,97 @@ function MetricBar({ baseline, candidate, max }: { baseline: number; candidate: 
     <div className="metric-bars" aria-hidden="true">
       <div className="metric-bar baseline" style={{ width: `${Math.max(2, (baseline / scale) * 100)}%` }} />
       <div className="metric-bar candidate" style={{ width: `${Math.max(2, (candidate / scale) * 100)}%` }} />
+    </div>
+  );
+}
+
+const SUBWAY_ROW_H = 30;
+
+function shortStepLabel(key?: string): string {
+  if (!key) return '';
+  const base = key.split('#')[0];
+  return base.length > 26 ? `${base.slice(0, 25)}…` : base;
+}
+
+function AlignmentMap({
+  comparison,
+  selectedRowId,
+  onSelectRow
+}: {
+  comparison: TraceComparison;
+  selectedRowId?: string;
+  onSelectRow(rowId: string): void;
+}) {
+  const rows = comparison.rows;
+  const laneUnits = rows.reduce(
+    (max, row) => Math.max(max, (row.baseline_index ?? -1) + 1, (row.candidate_index ?? -1) + 1),
+    1
+  );
+  const laneHeight = laneUnits * SUBWAY_ROW_H;
+
+  return (
+    <div className="alignment-map" aria-label="alignment subway map">
+      <div className="alignment-head">
+        <span className="alignment-lane-title">baseline</span>
+        <span className="alignment-lane-mid" />
+        <span className="alignment-lane-title right">candidate</span>
+      </div>
+      <div className="alignment-body" style={{ height: laneHeight }}>
+        <div className="alignment-lane">
+          {rows.map((row) =>
+            row.baseline_index !== undefined ? (
+              <button
+                key={`b-${row.row_id}`}
+                type="button"
+                className={`alignment-node ${row.status} ${row.row_id === selectedRowId && row.status !== 'same' ? 'selected' : ''}`}
+                style={{ top: row.baseline_index * SUBWAY_ROW_H + 4 }}
+                title={row.baseline_step_key}
+                onClick={() => row.status !== 'same' && onSelectRow(row.row_id)}
+              >
+                {row.row_id === comparison.first_divergence?.row_id ? <i className="alignment-zap">⚡</i> : null}
+                {shortStepLabel(row.baseline_step_key)}
+              </button>
+            ) : null
+          )}
+        </div>
+        <svg
+          className="alignment-links"
+          viewBox={`0 0 100 ${laneUnits}`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {rows.map((row) => {
+            if (row.baseline_index === undefined || row.candidate_index === undefined) return null;
+            const y1 = row.baseline_index + 0.5;
+            const y2 = row.candidate_index + 0.5;
+            return (
+              <path
+                key={row.row_id}
+                d={`M1,${y1} C35,${y1} 65,${y2} 99,${y2}`}
+                className={`alignment-link ${row.status}`}
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })}
+        </svg>
+        <div className="alignment-lane right">
+          {rows.map((row) =>
+            row.candidate_index !== undefined ? (
+              <button
+                key={`c-${row.row_id}`}
+                type="button"
+                className={`alignment-node ${row.status} ${row.row_id === selectedRowId && row.status !== 'same' ? 'selected' : ''}`}
+                style={{ top: row.candidate_index * SUBWAY_ROW_H + 4 }}
+                title={row.candidate_step_key}
+                onClick={() => row.status !== 'same' && onSelectRow(row.row_id)}
+              >
+                {row.row_id === comparison.first_divergence?.row_id ? <i className="alignment-zap">⚡</i> : null}
+                {shortStepLabel(row.candidate_step_key)}
+              </button>
+            ) : null
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -315,6 +406,8 @@ export default function TraceCompare({
           </ol>
         </div>
       ) : null}
+
+      <AlignmentMap comparison={comparison} selectedRowId={selectedRow?.row_id} onSelectRow={setSelectedRowId} />
 
       <div className="compare-table" role="table" aria-label="step alignment">
         <div className="compare-row compare-head" role="row">
