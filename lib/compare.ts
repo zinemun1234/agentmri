@@ -246,7 +246,7 @@ function divergenceConfidence(rowStatus: ComparisonRowStatus, baselineSpan?: Can
   return 'medium';
 }
 
-function traceMetrics(trace: CanonicalTrace): TraceMetrics {
+export function traceMetrics(trace: CanonicalTrace): TraceMetrics {
   const durationMs = trace.ended_at ? Date.parse(trace.ended_at) - Date.parse(trace.started_at) : undefined;
   return {
     duration_ms: durationMs,

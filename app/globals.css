@@ -2320,3 +2320,176 @@ mark.inline-hl.candidate {
   border-radius: 10px;
   white-space: nowrap;
 }
+
+/* ============================================
+   Multi-run Flakiness Panel + Flaky Step Matrix
+   ============================================ */
+.multirun-panel {
+  margin-top: 14px;
+}
+.multirun-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 12px 14px 4px;
+}
+.multirun-stat {
+  background: rgba(148, 163, 184, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.multirun-stat span {
+  display: block;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+.multirun-stat strong {
+  display: block;
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  margin: 2px 0;
+}
+.multirun-stat small {
+  font-size: 0.62rem;
+  color: var(--muted);
+  line-height: 1.3;
+  display: block;
+}
+.multirun-stat.tone-flaky strong { color: var(--suspect); }
+.multirun-stat.tone-stable strong { color: var(--pass); }
+.multirun-stat.tone-failing strong { color: var(--fail); }
+
+.flaky-matrix-wrap {
+  overflow-x: auto;
+  padding: 8px 14px;
+}
+.flaky-matrix {
+  min-width: 640px;
+}
+.flaky-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 150px) repeat(var(--cols, 8), minmax(44px, 1fr)) 74px;
+  gap: 3px;
+  align-items: center;
+  padding: 2px 0;
+}
+.flaky-row.golden-row {
+  background: rgba(52, 211, 153, 0.05);
+  border-radius: 6px;
+}
+.flaky-run-label {
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  color: var(--foreground);
+  padding-left: 6px;
+  white-space: nowrap;
+}
+.flaky-run-label small {
+  color: var(--muted);
+  margin-left: 6px;
+  font-size: 0.6rem;
+}
+.flaky-col-label {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
+}
+.flaky-col-label.hot { color: var(--suspect); }
+.flaky-verdict-label {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-align: center;
+}
+.flaky-cell {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66rem;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+}
+.flaky-cell.golden {
+  background: rgba(52, 211, 153, 0.14);
+  color: var(--pass);
+}
+.flaky-cell.same {
+  background: rgba(148, 163, 184, 0.08);
+  color: rgba(148, 163, 184, 0.6);
+}
+.flaky-cell.changed {
+  background: rgba(251, 191, 36, 0.16);
+  color: var(--suspect);
+}
+.flaky-cell.added {
+  background: rgba(34, 211, 238, 0.14);
+  color: #22d3ee;
+}
+.flaky-cell.removed {
+  background: rgba(248, 113, 113, 0.16);
+  color: var(--fail);
+}
+.flaky-cell.missing {
+  color: rgba(148, 163, 184, 0.25);
+}
+.flaky-cell.rate {
+  font-size: 0.58rem;
+  color: var(--muted);
+  background: transparent;
+}
+.flaky-cell.rate.mid { color: var(--suspect); }
+.flaky-cell.rate.high { color: var(--fail); font-weight: 700; }
+.flaky-instability {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 5px;
+}
+.flaky-verdict {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  text-align: center;
+  padding: 2px 4px;
+  border-radius: 5px;
+}
+.flaky-verdict.pass { color: var(--pass); background: rgba(52, 211, 153, 0.1); }
+.flaky-verdict.fail { color: var(--fail); background: rgba(248, 113, 113, 0.1); }
+.flaky-verdict.unknown { color: var(--muted); }
+
+.multirun-finding {
+  padding: 4px 14px 8px;
+  font-size: 0.74rem;
+  color: var(--foreground);
+}
+.multirun-finding code {
+  color: var(--suspect);
+  font-size: 0.7rem;
+}
+.multirun-finding.stable { color: var(--pass); }
+
+.golden-rationale {
+  padding: 0 14px 10px;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.golden-rationale summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+}
+.golden-rationale ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.golden-rationale li {
+  margin: 2px 0;
+}

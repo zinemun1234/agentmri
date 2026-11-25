@@ -1,0 +1,155 @@
+{
+  "trace_id": "calendar-run-02",
+  "project_id": "mock-office",
+  "agent_name": "OfficeTaskAgent",
+  "started_at": "2026-11-24T10:00:00Z",
+  "ended_at": "2026-11-24T10:00:42Z",
+  "status": "success",
+  "task": {
+    "instruction": "받은편지함에서 '제품 검토 회의' 메일을 찾아 회의 시간을 확인하고 캘린더에 일정을 만든다.",
+    "success_criteria": [
+      "올바른 메일을 찾는다",
+      "회의 시간이 2026-11-26 14:00 KST임을 확인한다",
+      "캘린더에 일정을 생성한다",
+      "생성된 일정을 검증한다"
+    ],
+    "forbidden_actions": [
+      "외부 이메일 전송",
+      "기존 일정 삭제"
+    ],
+    "environment": {
+      "apps": [
+        "mail",
+        "calendar"
+      ],
+      "locale": "ko-KR"
+    }
+  },
+  "evaluation": {
+    "verdict": "pass",
+    "score": 1,
+    "evaluator_comment": "캘린더 최종 상태가 성공 조건과 일치합니다."
+  },
+  "spans": [
+    {
+      "span_id": "root-r2",
+      "type": "agent",
+      "name": "OfficeTaskAgent 실행",
+      "started_at": "2026-11-24T10:00:03Z",
+      "ended_at": "2026-11-24T10:00:48Z",
+      "status": "ok"
+    },
+    {
+      "span_id": "plan-1-r2",
+      "parent_span_id": "root-r2",
+      "type": "llm",
+      "name": "작업 계획 생성",
+      "started_at": "2026-11-24T10:00:04Z",
+      "ended_at": "2026-11-24T10:00:10Z",
+      "status": "ok",
+      "input": "받은편지함에서 '제품 검토 회의' 메일을 찾아 회의 시간을 확인하고 캘린더에 일정을 만든다.",
+      "output": "1. 메일 검색 2. 회의 시간 추출 3. 캘린더 일정 생성 4. 생성 결과 확인",
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 72,
+        "cost_usd": 0.0021
+      }
+    },
+    {
+      "span_id": "mail-search-1-r2",
+      "parent_span_id": "root-r2",
+      "type": "tool",
+      "name": "mail.search",
+      "started_at": "2026-11-24T10:00:08Z",
+      "ended_at": "2026-11-24T10:00:16Z",
+      "status": "ok",
+      "input": {
+        "query": "제품 검토 회의",
+        "folder": "inbox",
+        "limit": 5
+      },
+      "output": {
+        "messages": [
+          {
+            "id": "mail-42",
+            "subject": "제품 검토 회의 일정 안내",
+            "body_excerpt": "회의는 11월 26일 오후 2시에 시작합니다."
+          }
+        ]
+      }
+    },
+    {
+      "span_id": "extract-time-1-r2",
+      "parent_span_id": "root-r2",
+      "type": "llm",
+      "name": "회의 시간 추출",
+      "started_at": "2026-11-24T10:00:14Z",
+      "ended_at": "2026-11-24T10:00:21Z",
+      "status": "ok",
+      "input": "회의는 11월 26일 오후 2시에 시작합니다.",
+      "output": {
+        "start": "2026-11-26T14:00:00+09:00",
+        "confidence": "high"
+      },
+      "usage": {
+        "input_tokens": 96,
+        "output_tokens": 35,
+        "cost_usd": 0.0011
+      }
+    },
+    {
+      "span_id": "calendar-create-1-r2",
+      "parent_span_id": "root-r2",
+      "type": "tool",
+      "name": "calendar.create_event",
+      "started_at": "2026-11-24T10:00:19Z",
+      "ended_at": "2026-11-24T10:00:33Z",
+      "status": "ok",
+      "input": {
+        "title": "제품 검토 회의",
+        "start": "2026-11-26T14:00:00+09:00",
+        "duration_minutes": 60
+      },
+      "output": {
+        "event_id": "evt-1001",
+        "created": true
+      }
+    },
+    {
+      "span_id": "verify-calendar-1-r2",
+      "parent_span_id": "root-r2",
+      "type": "verification",
+      "name": "생성된 일정 확인",
+      "started_at": "2026-11-24T10:00:31Z",
+      "ended_at": "2026-11-24T10:00:42Z",
+      "status": "ok",
+      "input": {
+        "event_id": "evt-1001"
+      },
+      "output": {
+        "exists": true,
+        "title": "제품 검토 회의",
+        "start": "2026-11-26T14:00:00+09:00"
+      }
+    },
+    {
+      "span_id": "final-1-r2",
+      "parent_span_id": "root-r2",
+      "type": "llm",
+      "name": "최종 응답 생성",
+      "started_at": "2026-11-24T10:00:40Z",
+      "ended_at": "2026-11-24T10:00:48Z",
+      "status": "ok",
+      "output": "제품 검토 회의 일정을 2026-11-26 14:00 KST에 생성하고 확인했습니다.",
+      "usage": {
+        "input_tokens": 210,
+        "output_tokens": 48,
+        "cost_usd": 0.0018
+      }
+    }
+  ],
+  "metadata": {
+    "fixture_kind": "success",
+    "description": "정상적으로 검증까지 수행한 mock office trace"
+  }
+}

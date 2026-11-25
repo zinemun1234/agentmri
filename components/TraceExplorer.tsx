@@ -8,6 +8,10 @@ import ignoredToolErrorJson from '@/fixtures/ignored-tool-error.json';
 import repeatedLoopJson from '@/fixtures/repeated-tool-loop.json';
 import retrievalWithoutEvidenceJson from '@/fixtures/retrieval-without-evidence.json';
 import successfulCalendarJson from '@/fixtures/successful-calendar.json';
+import multiRun01 from '@/fixtures/multirun/calendar/run-01-pass.json';
+import multiRun02 from '@/fixtures/multirun/calendar/run-02-pass.json';
+import multiRun03 from '@/fixtures/multirun/calendar/run-03-wrong-time.json';
+import multiRun04 from '@/fixtures/multirun/calendar/run-04-pass-no-verification.json';
 import unverifiedExternalActionJson from '@/fixtures/unverified-external-action.json';
 import { auditVerdict } from '@/lib/audit';
 import { compareTraces } from '@/lib/compare';
@@ -15,6 +19,7 @@ import { runDetectors } from '@/lib/detectors';
 import type { CanonicalTrace, ValidationIssue } from '@/lib/types';
 import { parseAndValidateTrace } from '@/lib/validate';
 import AuditReport from './AuditReport';
+import MultiRunPanel from './MultiRunPanel';
 import { IconAlert, IconClock, IconCoin, IconLayers, IconPulse, IconWrench } from './icons';
 import FindingsPanel from './FindingsPanel';
 import SpanDetail from './SpanDetail';
@@ -72,6 +77,13 @@ const samples = [
     trace: ignoredToolErrorJson as unknown as CanonicalTrace
   }
 ];
+
+const multiRunFixtures = [
+  multiRun01,
+  multiRun02,
+  multiRun03,
+  multiRun04
+] as unknown as CanonicalTrace[];
 
 function formatDuration(startedAt: string, endedAt?: string): string {
   if (!endedAt) return '-';
@@ -284,6 +296,8 @@ export default function TraceExplorer() {
         defaultCandidateKey="wrong-time"
         onInspectSpan={inspectComparedSpan}
       />
+
+      <MultiRunPanel runs={multiRunFixtures} title="Multi-run Flakiness — calendar task" />
 
       <div className="explorer-grid">
         <SpanTree trace={trace} selectedSpanId={selectedSpanId} findings={findings} onSelect={setSelectedSpanId} />
