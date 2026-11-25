@@ -181,6 +181,95 @@ const kindLabels: Record<FieldDifference['kind'], string> = {
   array_item_changed: '항목 변경'
 };
 
+
+function DivergenceRiver({
+  comparison,
+  candidate
+}: {
+  comparison: TraceComparison;
+  candidate: { trace: { spans: Array<{ span_id: string; started_at: string; ended_at?: string; name: string; type: string }> } };
+}) {
+  const chain = comparison.propagation_chain;
+  if (!chain || chain.nodes.length === 0) return null;
+
+  const spans = candidate.trace.spans;
+  if (spans.length === 0) return null;
+  const start = Math.min(...spans.map((span) => Date.parse(span.started_at)));
+  const end = Math.max(...spans.map((span) => Date.parse(span.ended_at ?? span.started_at)));
+  const total = Math.max(1, end - start);
+  const xOf = (ms: number) => ((ms - start) / total) * 100;
+
+  const spanById = new Map(spans.map((span) => [span.span_id, span]));
+  const chainPoints = chain.nodes
+    .map((node, order) => {
+      const span = spanById.get(node.span_id);
+      if (!span) return undefined;
+      const mid = Date.parse(span.started_at) + Math.max(1, Date.parse(span.ended_at ?? span.started_at) - Date.parse(span.started_at)) / 2;
+      return { node, x: xOf(mid), order };
+    })
+    .filter((point): point is NonNullable<typeof point> => point !== undefined);
+
+  const ROWS = 4;
+  const yOfOrder = (order: number) => 14 + (order % ROWS) * 26;
+
+  return (
+    <div className="divergence-river" aria-label="divergence river">
+      <div className="field-diff-head">
+        <h3>divergence river</h3>
+        <span>candidate 실행 시간축 위의 evidence 전파 경로</span>
+      </div>
+      <div className="river-canvas">
+        <div className="river-waterfall" aria-hidden="true">
+          {spans.map((span) => {
+            const left = xOf(Date.parse(span.started_at));
+            const width = Math.max(1, ((Date.parse(span.ended_at ?? span.started_at) - Date.parse(span.started_at)) / total) * 100);
+            return (
+              <div
+                key={span.span_id}
+                className="river-span-bar"
+                style={{ left: `${left}%`, width: `${Math.min(width, 100 - left)}%` }}
+                title={span.name}
+              />
+            );
+          })}
+        </div>
+        <svg className="river-svg" viewBox="0 0 100 120" preserveAspectRatio="none" aria-hidden="true">
+          {chainPoints.slice(0, -1).map((point, index) => {
+            const next = chainPoints[index + 1];
+            const y1 = yOfOrder(point.order);
+            const y2 = yOfOrder(next.order);
+            return (
+              <path
+                key={`flow-${index}`}
+                d={`M${point.x},${y1} C${point.x + (next.x - point.x) * 0.4},${y1 + 14} ${next.x - (next.x - point.x) * 0.4},${y2 - 14} ${next.x},${y2}`}
+                className="river-flow"
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })}
+        </svg>
+        {chainPoints.map((point) => (
+          <div
+            key={`${point.node.span_id}-${point.node.role}`}
+            className={`river-node ${point.node.role}`}
+            style={{ left: `${point.x}%`, top: yOfOrder(point.order) }}
+            title={`${point.node.step_label} — ${point.node.evidence}`}
+          >
+            <i className="river-node-dot" />
+            <span className="river-node-label">{point.node.step_label}</span>
+            {point.node.field_paths[0] ? <code className="river-node-field">{point.node.field_paths[0]}</code> : null}
+          </div>
+        ))}
+      </div>
+      <div className="river-footer">
+        <span>0s</span>
+        <span>{(total / 2000).toFixed(1)}s</span>
+        <span>{(total / 1000).toFixed(1)}s</span>
+      </div>
+    </div>
+  );
+}
+
 export default function TraceCompare({
   sources,
   defaultBaselineKey,
@@ -406,6 +495,8 @@ export default function TraceCompare({
           </ol>
         </div>
       ) : null}
+
+      <DivergenceRiver comparison={comparison} candidate={candidate} />
 
       <AlignmentMap comparison={comparison} selectedRowId={selectedRow?.row_id} onSelectRow={setSelectedRowId} />
 
