@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/brand-logo.png" alt="AgentMRI" width="420" />
+</p>
+
 # AgentMRI
 
 AI 에이전트의 실행 로그와 평가 결과를 입력받아 실패 원인, 채점 오류, 회귀 테스트 후보를 evidence 기반으로 도출하는 메타-평가 도구다.

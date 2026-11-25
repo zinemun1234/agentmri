@@ -1724,3 +1724,106 @@ button:active {
 .app-layout .hero h1 {
   font-size: 1.35rem;
 }
+
+/* ============================================
+   UI Upgrade v3 — mockup implementation
+   tone borders, icon alignment, evidence pills
+   ============================================ */
+
+/* brand mark image replaces CSS shape */
+.brand-mark-img {
+  border-radius: 8px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* icons inside headings/labels align inline */
+.panel-header h2,
+.field-diff-head h3,
+.summary-card span,
+.divergence-card > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.panel-header h2 svg,
+.field-diff-head h3 svg {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.summary-card span svg {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.divergence-card > span svg {
+  color: var(--suspect);
+  flex-shrink: 0;
+}
+
+/* verdict panel tone-colored border glow (mockup style) */
+.audit-report {
+  border-width: 1px;
+  border-style: solid;
+}
+.audit-report.tone-good {
+  border-color: rgba(52, 211, 153, 0.35);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.08), 0 8px 32px rgba(52, 211, 153, 0.06);
+}
+.audit-report.tone-good .panel-header h2 {
+  color: var(--pass);
+}
+.audit-report.tone-good .panel-header h2 svg {
+  color: var(--pass);
+}
+.audit-report.tone-bad {
+  border-color: rgba(248, 113, 113, 0.35);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.08), 0 8px 32px rgba(248, 113, 113, 0.06);
+}
+.audit-report.tone-bad .panel-header h2,
+.audit-report.tone-bad .panel-header h2 svg {
+  color: var(--fail);
+}
+.audit-report.tone-warning {
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.08), 0 8px 32px rgba(251, 191, 36, 0.06);
+}
+.audit-report.tone-warning .panel-header h2,
+.audit-report.tone-warning .panel-header h2 svg {
+  color: var(--suspect);
+}
+
+/* evidence chips as pills with tone dot (mockup style) */
+.evidence-links button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: var(--elevation-2);
+}
+.evidence-links button::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pass);
+  box-shadow: 0 0 5px rgba(52, 211, 153, 0.6);
+  flex-shrink: 0;
+}
+
+/* metric cards: icon row alignment fix */
+.summary-grid .summary-card span {
+  font-size: 0.62rem;
+}
+
+/* compare selectors: colored dot before label text */
+.compare-controls label {
+  position: relative;
+}
+
+/* regression export panel subtle border */
+.regression-export {
+  border-top: 1px solid rgba(255,255,255,0.05);
+}

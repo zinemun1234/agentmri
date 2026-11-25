@@ -1,4 +1,5 @@
 import type { AuditedVerdict, VerdictAuditResult } from '@/lib/audit';
+import { IconShield } from './icons';
 import type { FailureCategory } from '@/lib/types';
 
 interface AuditReportProps {
@@ -40,7 +41,7 @@ export default function AuditReport({ audit, onSelectSpan }: AuditReportProps) {
   return (
     <section className={`panel audit-report tone-${tone}`} aria-label="Verdict audit report">
       <div className="panel-header">
-        <h2>Verdict Audit</h2>
+        <h2><IconShield size={15} /> Verdict Audit</h2>
         <span>evidence {audit.evidence_validation.evidence_count}개 확인</span>
       </div>
 

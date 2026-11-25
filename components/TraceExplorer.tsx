@@ -14,6 +14,7 @@ import { runDetectors } from '@/lib/detectors';
 import type { CanonicalTrace, ValidationIssue } from '@/lib/types';
 import { parseAndValidateTrace } from '@/lib/validate';
 import AuditReport from './AuditReport';
+import { IconAlert, IconClock, IconCoin, IconLayers, IconPulse, IconWrench } from './icons';
 import FindingsPanel from './FindingsPanel';
 import SpanDetail from './SpanDetail';
 import SpanTree from './SpanTree';
@@ -151,7 +152,7 @@ export default function TraceExplorer() {
     <div className="app-layout">
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <span className="brand-mark" aria-hidden="true" />
+        <img src="/brand-mark.svg" alt="" className="brand-mark-img" width={28} height={28} />
         <div>
           <strong>AgentMRI</strong>
           <small>trace audit MVP</small>
@@ -228,27 +229,27 @@ export default function TraceExplorer() {
 
       <section className="summary-grid" aria-label="Trace summary">
         <div className="summary-card">
-          <span>status</span>
+          <span><IconPulse size={13} /> status</span>
           <strong>{trace.status ?? 'unknown'}</strong>
         </div>
         <div className="summary-card">
-          <span>spans</span>
+          <span><IconLayers size={13} /> spans</span>
           <strong>{trace.spans.length}</strong>
         </div>
         <div className="summary-card">
-          <span>tool calls</span>
+          <span><IconWrench size={13} /> tool calls</span>
           <strong>{toolCount}</strong>
         </div>
         <div className="summary-card">
-          <span>errors</span>
+          <span><IconAlert size={13} /> errors</span>
           <strong>{errorCount}</strong>
         </div>
         <div className="summary-card">
-          <span>duration</span>
+          <span><IconClock size={13} /> duration</span>
           <strong>{formatDuration(trace.started_at, trace.ended_at)}</strong>
         </div>
         <div className="summary-card">
-          <span>cost</span>
+          <span><IconCoin size={13} /> cost</span>
           <strong>{formatCost(trace)}</strong>
         </div>
       </section>

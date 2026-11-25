@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { compareTraces, type ComparisonRow, type ComparisonRowStatus } from '@/lib/compare';
+import { IconBolt, IconChain, IconDiff, IconFlask } from './icons';
 import { semanticDifferences, type FieldDifference } from '@/lib/compare/diff';
 import { buildRegressionCandidate } from '@/lib/regression';
 import type { CanonicalTrace } from '@/lib/types';
@@ -133,7 +134,7 @@ export default function TraceCompare({
   return (
     <section className="compare-panel panel" aria-label="Trace compare">
       <div className="panel-header">
-        <h2>Trace Compare</h2>
+        <h2><IconDiff size={15} /> Trace Compare</h2>
         <span>{changedCount} divergent steps</span>
       </div>
 
@@ -194,7 +195,7 @@ export default function TraceCompare({
       {comparison.first_divergence ? (
         <div className={`divergence-card ${comparison.first_divergence.status}`}>
           <span>
-            first divergence 후보 · {comparison.first_divergence.type} · confidence {comparison.first_divergence.confidence}
+            <IconBolt size={13} /> first divergence · {comparison.first_divergence.type} · confidence {comparison.first_divergence.confidence}
           </span>
           <strong>{comparison.first_divergence.summary}</strong>
           <div className="divergence-links">
@@ -212,7 +213,7 @@ export default function TraceCompare({
       {selectedDiffs.length > 0 ? (
         <div className="field-diff" aria-label="field diff viewer">
           <div className="field-diff-head">
-            <h3>field-level diff</h3>
+            <h3><IconDiff size={13} /> field-level diff</h3>
             <span>
               {selectedRow?.baseline_step_key ?? selectedRow?.candidate_step_key} · semantic diff {selectedDiffs.length}건
             </span>
@@ -241,7 +242,7 @@ export default function TraceCompare({
       {comparison.propagation_chain ? (
         <div className="propagation-chain" aria-label="propagation chain">
           <div className="field-diff-head">
-            <h3>propagation chain</h3>
+            <h3><IconChain size={13} /> propagation chain</h3>
             <span>confidence {comparison.propagation_chain.confidence}</span>
           </div>
           <ol>
@@ -294,7 +295,7 @@ export default function TraceCompare({
       {regression ? (
         <div className="regression-export" aria-label="regression export">
           <div className="field-diff-head">
-            <h3>regression test 후보</h3>
+            <h3><IconFlask size={13} /> regression test 후보</h3>
             <span>
               confidence {regression.confidence} · evidence {regression.evidence_span_ids.length}개
             </span>
