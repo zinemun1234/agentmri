@@ -22,6 +22,12 @@ AgentMRI는 Langfuse 같은 observability 플랫폼을 대체하지 않는다. �
 
 ![Trace Compare](docs/screenshots/trace-compare.png)
 
+### Multi-run Flakiness — 같은 task N회 실행의 불안정 지도
+
+task fingerprint로 묶인 실행 그룹에서 golden을 자동 선정하고, run × step 매트릭스로 어느 step이 얼마나 자주 갈라지는지 보여준다. pass rate는 Wilson 신뢰구간과 함께 표시된다.
+
+![Multi-run Flakiness](docs/screenshots/multirun-flakiness.png)
+
 ### Trace Explorer — span tree, timeline, findings
 
 실행 구조를 span tree와 timeline으로 탐색하고, detector finding이 인용하는 evidence span을 확인한다.
@@ -31,44 +37,43 @@ AgentMRI는 Langfuse 같은 observability 플랫폼을 대체하지 않는다. �
 
 ## 현재 상태
 
-현재 구현된 첫 scaffold:
+### 감사·진단 코어
 
-- canonical trace TypeScript schema
-- trace validation
-- 샘플 trace 8종
-  - 정상 실행
-  - 잘못된 회의 시간 paired failure
-  - 반복 도구 호출 루프
-  - evaluator false negative 의심 사례
-  - 비용 급증
-  - 검증 없는 외부 행동
-  - 근거 없는 사실 주장
-  - 도구 오류 무시
-- 규칙 기반 detector 6종
-  - D01 반복 도구 호출 루프
-  - D03 도구 오류 무시
-  - D04 최종 검증 누락
-  - D05 검증 없는 외부 행동
-  - D06 비용 급증
-  - D09 근거 없는 사실 주장
-- evidence span과 연결된 finding UI
-- 규칙 기반 verdict audit v0
-  - true pass/fail 판정
-  - evaluator false positive/negative 의심 분류
-  - 원래 verdict 신뢰도와 audit confidence 표시
-- evidence reference validator
-- Trace Compare v0
-  - baseline/candidate step alignment
-  - first divergence 후보 탐지
-  - duration, cost, tool call, error count delta 비교
-- span tree, timeline, span detail 화면
-- FastAPI validation 및 repeated-loop detection endpoint
-- Vitest와 pytest 기본 테스트
+- canonical trace TypeScript schema + validation (evidence validator가 존재하지 않는 span 인용을 거부)
+- 규칙 기반 detector 6종 — D01 반복 도구 루프, D03 도구 오류 무시, D04 최종 검증 누락, D05 검증 없는 외부 행동, D06 비용 급증, D09 근거 없는 주장
+- verdict audit — true pass/fail 판정, evaluator false positive/negative 의심 재분류, 신뢰도·confidence 표시
+- 샘플 trace 8종 + multi-run fixture 4종
+
+### Trace Compare — 비교·진단·regression 생성 루프
+
+- baseline/candidate step alignment + first divergence 자동 탐지 + divergence type 11종 분류
+- field-level diff (noise 규칙으로 식별자·timestamp·usage 제외, semantic diff만 표시)
+- propagation chain — divergence가 downstream으로 퍼지는 evidence 경로 추적
+- regression test 후보 자동 생성 — given/when/then + assertion DSL, JSON 복사/다운로드
+- **regression candidate → 실행 가능한 pytest 컴파일** — standalone 파일 다운로드, golden에서는 통과하고 regression에서는 실패 (표준 라이브러리만 사용)
+- **CI audit gate** — `npx tsx scripts/agentmri-audit.ts`로 high/critical finding, verdict 재분류, verification 소실 시 exit 1. GitHub Actions 요약 출력 지원
+- compare-aware audit — 비교 evidence를 verdict 판정 신뢰도 계산에 융합 (verification 소실 시 false positive 재분류, golden과 동일한데 FAIL이면 false negative 근거 강화)
+
+### Multi-run Flakiness (같은 task N회 실행 분석)
+
+- task fingerprint — 정규화된 TaskSpec 해시로 같은 task 실행을 자동 grouping
+- golden 자동 선정 — medoid 휴리스틱 + 근거 기록, 수동 override 지원
+- flakiness 지표 — pass rate + Wilson 신뢰구간, instability score, flip rate, data confidence
+- step별 divergence/presence rate — 가장 자주 갈라지는 step 자동 식별
+
+### 시각화
+
+- hierarchical waterfall (time ruler, 계층 indent, verification/error 마커, evidence 점) + cost burnup lane
+- alignment subway map — 두 실행의 구조적 정렬을 연결선 그래프로
+- divergence river — 실패 전파 경로를 시간축 위에
+- flaky step matrix — run × step 불안정 지도
+- semantic diff tree — 문자 단위 인라인 하이라이트 diff
+- regression coverage overlay — assertion이 보호하는 step 표시
+- step duration / metric paired 비교 차트
 
 아직 구현하지 않은 것:
 
-- LLM audit agent
-- regression test export
+- LLM Compare Analyst (deterministic 분석 결과의 자연어 설명 — evidence 인용 검증 포함)
 - Langfuse/OpenTelemetry adapter
 - 실제 mock office browser benchmark
 
@@ -103,6 +108,18 @@ API 확인:
 ```bash
 curl http://localhost:8000/health
 ```
+
+### CI audit gate
+
+```bash
+# 단일 trace 감사
+npx tsx scripts/agentmri-audit.ts --candidate run.json
+
+# golden과 비교 감사 — verification 소실까지 탐지
+npx tsx scripts/agentmri-audit.ts --baseline golden.json --candidate run.json
+```
+
+high/critical detector finding, `evaluator_false_positive/negative_suspected` 재분류, verification 소실이 있으면 exit code 1로 CI를 차단한다. `.github/workflows/agentmri-audit.yml`에 예시 워크플로우가 있다.
 
 ### 백엔드 테스트
 
@@ -156,15 +173,12 @@ agentmri/
 
 ## 첫 데모 시나리오
 
-1. `반복 루프 실패` 샘플을 연다.
-2. D01 detector가 같은 `spreadsheet.get_range` 호출 5회를 evidence로 묶는다.
-3. D04 detector가 최종 verification이 없음을 지적한다.
-4. 사용자가 evidence 버튼을 눌러 관련 span으로 이동한다.
-5. `채점 오류 의심` 샘플을 열면 실행은 성공인데 evaluator가 FAIL인 불일치를 보여준다.
-6. Verdict Audit 패널이 이 사례를 `evaluator_false_negative_suspected`로 재분류하고 evidence span을 제시한다.
-7. `외부 행동 미검증`과 `근거 없는 주장` 샘플은 PASS 판정이지만 `evaluator_false_positive_suspected`로 재분류된다.
-8. Trace Compare에서 `성공 실행`과 `잘못된 회의 시간`을 비교하면 `회의 시간 추출` step을 first divergence 후보로 보여준다.
-9. `candidate step 열기`를 누르면 실패 trace의 해당 span detail로 바로 이동한다.
+1. `반복 루프 실패` 샘플을 연다 — D01 detector가 같은 `spreadsheet.get_range` 호출 5회를 evidence로 묶고, D04가 최종 verification 누락을 지적한다.
+2. `채점 오류 의심` 샘플 — 실행은 성공인데 evaluator가 FAIL인 불일치. Verdict Audit이 `evaluator_false_negative_suspected`로 재분류하고 evidence span을 제시한다.
+3. Trace Compare에서 `성공 실행` vs `잘못된 회의 시간` 비교 — alignment subway map에서 `회의 시간 추출` step이 ⚡ first divergence로 표시되고, field diff에서 `14:00`의 `4`와 `15:00`의 `5`만 하이라이트된다.
+4. divergence river에서 실패가 verification을 거쳐 최종 응답까지 퍼지는 경로를 시간축 위에서 따라간다.
+5. regression test 후보의 given/when/then을 확인하고 JSON을 다운로드한다 — propagation chain의 🛡 배지가 각 assertion이 보호하는 step을 보여준다.
+6. Multi-run Flakiness 패널 — calendar task 4회 실행의 flaky step matrix에서 run-03은 전파 경로가 ▲로, run-04는 verification 자리에 ✗로 표시되고, 하단 불안정율 행이 step별 divergence 빈도를 보여준다. golden은 medoid 휴리스틱으로 자동 선정된다.
 
 ## 설계 방향
 

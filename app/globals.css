@@ -2493,3 +2493,11 @@ mark.inline-hl.candidate {
 .golden-rationale li {
   margin: 2px 0;
 }
+
+.pytest-download {
+  border-color: rgba(52, 211, 153, 0.4) !important;
+  color: var(--pass) !important;
+}
+.pytest-download:hover {
+  background: rgba(52, 211, 153, 0.12) !important;
+}

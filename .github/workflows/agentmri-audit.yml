@@ -1,0 +1,28 @@
+# AgentMRI audit gate — 에이전트 실행 trace를 PR에서 자동 감사한다.
+# 사용법: 레포에 golden trace와 후보 trace를 커밋하고 아래 경로를 맞춘다.
+name: agentmri-audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      # fixture 데모: 성공 trace는 통과하고, 미검증 외부 행동 trace는 게이트가 차단한다.
+      # 실제 사용에서는 CI가 생성한 실행 trace를 candidate로 넘긴다.
+      - name: audit golden sanity check
+        run: npx tsx scripts/agentmri-audit.ts --baseline fixtures/successful-calendar.json --candidate fixtures/successful-calendar.json
+      - name: audit must catch unverified external action
+        run: |
+          if npx tsx scripts/agentmri-audit.ts --candidate fixtures/unverified-external-action.json; then
+            echo "게이트가 high severity finding을 놓쳤습니다" && exit 1
+          else
+            echo "게이트가 정상적으로 차단했습니다"
+          fi
