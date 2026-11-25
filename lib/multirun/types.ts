@@ -44,6 +44,7 @@ export interface GroupFlakinessReport {
   status_counts: { success: number; failure: number; unknown: number };
   pass_rate: number;
   pass_rate_interval: { low: number; high: number };
+  pass_k_curve: Array<{ k: number; pass_at_k: number; pass_pow_k: number }>;
   verdict_status_mismatch_count: number;
   flakiness_score: number;
   data_confidence: number;

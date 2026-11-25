@@ -79,9 +79,11 @@ if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${report}\n\n`);
 }
 
-const failed = severe.length > 0 || verdictFlags || Boolean(verificationRemoved);
+// true_failure도 게이트 차단 대상 — audit이 확인한 실제 실패를 CI가 통과시키면 안 된다
+const trueFailure = audit.audited_verdict === 'true_failure';
+const failed = severe.length > 0 || verdictFlags || Boolean(verificationRemoved) || trueFailure;
 if (failed) {
-  console.error(`\n✗ audit gate FAILED — severe findings ${severe.length}, verdict 재분류 ${verdictFlags}, verification 소실 ${Boolean(verificationRemoved)}`);
+  console.error(`\n✗ audit gate FAILED — severe findings ${severe.length}, verdict 재분류 ${verdictFlags}, verification 소실 ${Boolean(verificationRemoved)}, true failure ${trueFailure}`);
   process.exit(1);
 }
 console.log('\n✓ audit gate passed');

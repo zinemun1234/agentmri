@@ -1,4 +1,5 @@
 import { compareTraces, type DivergenceType } from '../compare';
+import { passKCurve } from './passk';
 import type { RunGroup, GroupFlakinessReport, DistributionStats, StepFlakiness } from './types';
 
 function distribution(values: number[]): DistributionStats | undefined {
@@ -138,6 +139,7 @@ export function analyzeRunGroup(group: RunGroup): GroupFlakinessReport {
     status_counts: statusCounts,
     pass_rate: passRate,
     pass_rate_interval: interval,
+    pass_k_curve: passKCurve(runs.length, verdictCounts.pass),
     verdict_status_mismatch_count: mismatch,
     flakiness_score: flakinessScore,
     data_confidence: dataConfidence,

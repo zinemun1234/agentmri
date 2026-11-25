@@ -141,6 +141,15 @@ export default function MultiRunPanel({ runs, title }: MultiRunPanelProps) {
           <small>{flakyLabel} · data confidence {report.data_confidence.toFixed(2)}</small>
         </div>
         <div className="multirun-stat">
+          <span>pass^k (일관성)</span>
+          <strong>{report.pass_k_curve.length > 0 ? pct(report.pass_k_curve[report.pass_k_curve.length - 1].pass_pow_k) : '—'}</strong>
+          <small>
+            {report.pass_k_curve.length > 0
+              ? `k=${report.pass_k_curve[report.pass_k_curve.length - 1].k}회 연속 모두 성공할 확률 (무편향 추정)`
+              : '실행 수 부족'}
+          </small>
+        </div>
+        <div className="multirun-stat">
           <span>flip rate</span>
           <strong>{pct(report.flip_rate)}</strong>
           <small>연속 실행 간 verdict 전환율</small>

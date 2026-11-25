@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { compareTraces, type TraceComparison, type ComparisonRow, type ComparisonRowStatus } from '@/lib/compare';
 import { IconBolt, IconChain, IconDiff, IconFlask } from './icons';
 import { semanticDifferences, type FieldDifference } from '@/lib/compare/diff';
-import { buildRegressionCandidate, compilePytest } from '@/lib/regression';
+import { buildRegressionCandidate, compilePytest, compileVitest } from '@/lib/regression';
 import type { CanonicalTrace } from '@/lib/types';
 
 export interface CompareSource {
@@ -397,6 +397,17 @@ export default function TraceCompare({
     URL.revokeObjectURL(url);
   }
 
+  function downloadVitest() {
+    if (!regression) return;
+    const blob = new Blob([compileVitest(regression)], { type: 'text/typescript' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${regression.candidate_id.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase()}.test.ts`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="compare-panel panel" aria-label="Trace compare">
       <div className="panel-header">
@@ -670,6 +681,9 @@ export default function TraceCompare({
             </button>
             <button type="button" onClick={downloadPytest} className="pytest-download" title="실행 가능한 pytest 파일로 다운로드 — golden에서 통과하고 regression에서 실패하는 standalone 테스트">
               pytest 다운로드
+            </button>
+            <button type="button" onClick={downloadVitest} className="pytest-download" title="실행 가능한 vitest 파일로 다운로드 — JS/TS 에이전트 프로젝트용 standalone 테스트">
+              vitest 다운로드
             </button>
           </div>
           <details className="regression-json">
