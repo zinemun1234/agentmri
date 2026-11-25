@@ -4,6 +4,27 @@ AI 에이전트의 실행 로그와 평가 결과를 입력받아 실패 원인,
 
 AgentMRI는 Langfuse 같은 observability 플랫폼을 대체하지 않는다. 그 위에서 **이 실행을 믿어도 되는지, 원래 PASS/FAIL 판정이 맞는지**를 감사하는 상위 계층을 목표로 한다.
 
+## 화면
+
+### Verdict Audit — 원래 평가가 맞는지 재감사
+
+원래 PASS 판정이어도 trace evidence가 실패 위험을 가리키면 `evaluator_false_positive_suspected`로 재분류한다.
+
+![Verdict Audit](docs/screenshots/verdict-audit.png)
+
+### Trace Compare — 성공/실패 실행의 first divergence 탐지
+
+두 실행을 step 단위로 정렬해 처음 갈라지는 지점과 downstream 전파를 비교한다.
+
+![Trace Compare](docs/screenshots/trace-compare.png)
+
+### Trace Explorer — span tree, timeline, findings
+
+실행 구조를 span tree와 timeline으로 탐색하고, detector finding이 인용하는 evidence span을 확인한다.
+
+![Trace Explorer](docs/screenshots/trace-explorer.png)
+
+
 ## 현재 상태
 
 현재 구현된 첫 scaffold:
