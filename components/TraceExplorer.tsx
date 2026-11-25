@@ -82,6 +82,19 @@ function formatCost(trace: CanonicalTrace): string {
   return `$${cost.toFixed(4)}`;
 }
 
+type SampleTone = 'good' | 'bad' | 'warning' | 'neutral';
+
+function sampleTone(trace: CanonicalTrace): SampleTone {
+  const verdict = trace.evaluation?.verdict;
+  const status = trace.status;
+  const hasFindings = runDetectors(trace).length > 0;
+  if (status === 'success' && verdict === 'pass') return hasFindings ? 'warning' : 'good';
+  if (status === 'success' && verdict === 'fail') return 'warning';
+  if (status === 'failure' && verdict === 'pass') return 'warning';
+  if (verdict === 'fail' || status === 'failure') return 'bad';
+  return hasFindings ? 'warning' : 'neutral';
+}
+
 export default function TraceExplorer() {
   const [trace, setTrace] = useState<CanonicalTrace>(samples[0].trace);
   const [selectedSpanId, setSelectedSpanId] = useState<string>('root');
@@ -135,37 +148,35 @@ export default function TraceExplorer() {
   const verdictNeedsReview = verdictAudit.audited_verdict === 'evaluator_false_negative_suspected';
 
   return (
-    <main className="app-shell">
-      <header className="hero">
+    <div className="app-layout">
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <span className="brand-mark" aria-hidden="true" />
         <div>
-          <p className="eyebrow">AgentMRI MVP</p>
-          <h1>에이전트 실행과 평가를 감사하는 Trace Explorer</h1>
-          <p className="hero-copy">
-            실행 로그를 구조화하고, 규칙 기반 detector로 위험 신호를 찾고, PASS/FAIL 판정이 evidence와 맞는지
-            확인합니다.
-          </p>
+          <strong>AgentMRI</strong>
+          <small>trace audit MVP</small>
         </div>
-        <div className="hero-card">
-          <span>현재 trace</span>
-          <strong>{trace.trace_id}</strong>
-          <small>{sourceLabel}</small>
-        </div>
-      </header>
-
-      <section className="import-panel panel">
-        <div className="sample-buttons" aria-label="sample traces">
-          {samples.map((sample) => (
-            <button
-              key={sample.key}
-              type="button"
-              className={sourceLabel === sample.label ? 'active' : ''}
-              onClick={() => loadSample(sample.key)}
-              title={sample.description}
-            >
-              {sample.label}
-            </button>
-          ))}
-        </div>
+      </div>
+      <nav className="sidebar-nav" aria-label="trace library">
+        <span className="sidebar-section-label">trace library</span>
+        {samples.map((sample) => (
+          <button
+            key={sample.key}
+            type="button"
+            className={`sidebar-item tone-${sampleTone(sample.trace)}${sourceLabel === sample.label ? ' active' : ''}`}
+            onClick={() => loadSample(sample.key)}
+            title={sample.description}
+          >
+            <span className="tone-dot" aria-hidden="true" />
+            <span className="sidebar-item-text">
+              <span>{sample.label}</span>
+              <small>{sample.trace.spans.length} spans · {sample.trace.evaluation?.verdict ?? 'no eval'}</small>
+            </span>
+          </button>
+        ))}
+      </nav>
+      <div className="sidebar-import">
+        <span className="sidebar-section-label">import</span>
         <label className="file-picker">
           JSON 파일 업로드
           <input type="file" accept="application/json,.json" onChange={handleFileChange} />
@@ -182,7 +193,26 @@ export default function TraceExplorer() {
             검증하고 불러오기
           </button>
         </details>
-        {issues.length > 0 ? (
+      </div>
+    </aside>
+    <main className="app-shell">
+      <header className="hero">
+        <div>
+          <h1>에이전트 실행과 평가를 감사하는 Trace Explorer</h1>
+          <p className="hero-copy">
+            실행 로그를 구조화하고, 규칙 기반 detector로 위험 신호를 찾고, PASS/FAIL 판정이 evidence와 맞는지
+            확인합니다.
+          </p>
+        </div>
+        <div className="hero-card">
+          <span>현재 trace</span>
+          <strong>{trace.trace_id}</strong>
+          <small>{sourceLabel}</small>
+        </div>
+      </header>
+
+      {issues.length > 0 ? (
+        <section className="import-panel panel">
           <div className="validation-errors">
             <strong>검증 오류 {issues.length}건</strong>
             <ul>
@@ -193,8 +223,8 @@ export default function TraceExplorer() {
               ))}
             </ul>
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
 
       <section className="summary-grid" aria-label="Trace summary">
         <div className="summary-card">
@@ -255,5 +285,6 @@ export default function TraceExplorer() {
         <SpanDetail span={selectedSpan} />
       </div>
     </main>
+    </div>
   );
 }
