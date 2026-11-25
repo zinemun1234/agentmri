@@ -2238,3 +2238,85 @@ button:active {
   color: var(--muted);
   margin-top: 3px;
 }
+
+/* ============================================
+   Semantic Diff Tree + inline highlight
+   ============================================ */
+.field-diff-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.diff-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.diff-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(148, 163, 184, 0.06);
+  border-bottom: 1px solid var(--border);
+}
+.diff-group-head strong {
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  color: var(--info);
+}
+.diff-group-head span {
+  font-size: 0.64rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+.diff-tree-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 170px) 1fr 1fr;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.07);
+  align-items: start;
+}
+.diff-tree-row:last-child { border-bottom: none; }
+.diff-tree-path {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--foreground);
+  word-break: break-all;
+}
+.diff-tree-path small {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+mark.inline-hl {
+  padding: 0 2px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+mark.inline-hl.baseline {
+  background: rgba(248, 113, 113, 0.28);
+  color: #fca5a5;
+}
+mark.inline-hl.candidate {
+  background: rgba(52, 211, 153, 0.25);
+  color: #6ee7b7;
+}
+
+/* ============================================
+   Regression coverage badges
+   ============================================ */
+.coverage-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--pass);
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}

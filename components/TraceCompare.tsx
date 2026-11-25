@@ -172,6 +172,52 @@ function formatValue(value: unknown): string {
   return serialized.length > 80 ? `${serialized.slice(0, 80)}…` : serialized;
 }
 
+function splitInlineDiff(baseline: string, candidate: string): { prefix: string; baseMid: string; candMid: string; suffix: string } {
+  let start = 0;
+  const minLen = Math.min(baseline.length, candidate.length);
+  while (start < minLen && baseline[start] === candidate[start]) start += 1;
+  let endBase = baseline.length;
+  let endCand = candidate.length;
+  while (endBase > start && endCand > start && baseline[endBase - 1] === candidate[endCand - 1]) {
+    endBase -= 1;
+    endCand -= 1;
+  }
+  return {
+    prefix: baseline.slice(0, start),
+    baseMid: baseline.slice(start, endBase),
+    candMid: candidate.slice(start, endCand),
+    suffix: baseline.slice(endBase)
+  };
+}
+
+function InlineValue({ text, mid, prefix, suffix, tone }: { text: string; mid: string; prefix: string; suffix: string; tone: 'baseline' | 'candidate' }) {
+  if (!mid && prefix + suffix === text) return <>{text}</>;
+  return (
+    <>
+      {prefix}
+      <mark className={`inline-hl ${tone}`}>{mid || '∅'}</mark>
+      {suffix}
+    </>
+  );
+}
+
+function groupDiffsByRoot<T extends { path: string }>(diffs: T[]): Array<{ root: string; items: T[] }> {
+  const groups = new Map<string, T[]>();
+  for (const diff of diffs) {
+    const root = diff.path.split(/[.[]/)[0] || diff.path;
+    const list = groups.get(root) ?? [];
+    list.push(diff);
+    groups.set(root, list);
+  }
+  return [...groups.entries()].map(([root, items]) => ({ root, items }));
+}
+
+function assertionCoversStep(assertion: { span_name?: string; tool_name?: string }, stepLabel: string): boolean {
+  const name = assertion.span_name ?? assertion.tool_name;
+  if (!name) return false;
+  return stepLabel === name || stepLabel.endsWith(`:${name}`) || stepLabel.includes(name);
+}
+
 const kindLabels: Record<FieldDifference['kind'], string> = {
   value_changed: '변경',
   field_added: '추가됨',
@@ -447,20 +493,33 @@ export default function TraceCompare({
               {selectedRow?.baseline_step_key ?? selectedRow?.candidate_step_key} · semantic diff {selectedDiffs.length}건
             </span>
           </div>
-          <div className="field-diff-table" role="table" aria-label="field differences">
-            <div className="field-diff-row field-diff-header" role="row">
-              <span>field path</span>
-              <span>baseline</span>
-              <span>candidate</span>
-            </div>
-            {selectedDiffs.slice(0, 12).map((difference) => (
-              <div key={`${difference.path}-${difference.kind}`} className={`field-diff-row ${difference.kind}`} role="row">
-                <div className="field-path">
-                  <code>{difference.path}</code>
-                  <small>{kindLabels[difference.kind]}</small>
+<div className="field-diff-tree" aria-label="field differences">
+            {groupDiffsByRoot(selectedDiffs.slice(0, 12)).map((group) => (
+              <div key={group.root} className="diff-group">
+                <div className="diff-group-head">
+                  <strong>{group.root}</strong>
+                  <span>{group.items.length}건</span>
                 </div>
-                <div className="field-value baseline">{formatValue(difference.baseline_value)}</div>
-                <div className="field-value candidate">{formatValue(difference.candidate_value)}</div>
+                {group.items.map((difference) => {
+                  const baselineText = formatValue(difference.baseline_value);
+                  const candidateText = formatValue(difference.candidate_value);
+                  const parts = splitInlineDiff(baselineText, candidateText);
+                  const tail = difference.path.slice(group.root.length).replace(/^[.[]/, '') || '(root)';
+                  return (
+                    <div key={`${difference.path}-${difference.kind}`} className={`diff-tree-row ${difference.kind}`}>
+                      <div className="diff-tree-path" title={difference.path}>
+                        {tail}
+                        <small>{kindLabels[difference.kind] ?? difference.kind}</small>
+                      </div>
+                      <div className="field-value baseline">
+                        <InlineValue text={baselineText} mid={parts.baseMid} prefix={parts.prefix} suffix={parts.suffix} tone="baseline" />
+                      </div>
+                      <div className="field-value candidate">
+                        <InlineValue text={candidateText} mid={parts.candMid} prefix={parts.prefix} suffix={parts.suffix} tone="candidate" />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -483,6 +542,11 @@ export default function TraceCompare({
                 </div>
                 <p>{node.evidence}</p>
                 <div className="chain-node-foot">
+                  {regression?.assertions.filter((assertion) => assertionCoversStep(assertion, node.step_label)).map((assertion, index) => (
+                    <span key={`cov-${index}`} className="coverage-badge" title={`regression assertion: ${assertion.type}`}>
+                      🛡 {assertion.type === 'json_path_equals' ? assertion.path ?? assertion.type : assertion.type.replace(/_/g, ' ')}
+                    </span>
+                  ))}
                   {node.field_paths.slice(0, 3).map((path) => (
                     <code key={path}>{path}</code>
                   ))}
