@@ -12,9 +12,9 @@ AgentMRI는 Langfuse 같은 observability 플랫폼을 대체하지 않는다. �
 
 ![Verdict Audit](docs/screenshots/verdict-audit.png)
 
-### Trace Compare — 성공/실패 실행의 first divergence 탐지
+### Trace Compare — divergence 진단부터 regression test export까지
 
-두 실행을 step 단위로 정렬해 처음 갈라지는 지점과 downstream 전파를 비교한다.
+두 실행을 step 단위로 정렬해 처음 갈라지는 지점을 찾고, field-level diff와 propagation chain으로 원인이 downstream에 퍼지는 경로를 추적한 뒤 regression test 후보 JSON으로 export한다.
 
 ![Trace Compare](docs/screenshots/trace-compare.png)
 
