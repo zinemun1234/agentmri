@@ -4,6 +4,8 @@
 
 # AgentMRI
 
+**Live demo: https://agentmri.vercel.app**
+
 AI 에이전트의 실행 로그와 평가 결과를 입력받아 실패 원인, 채점 오류, 회귀 테스트 후보를 evidence 기반으로 도출하는 메타-평가 도구다.
 
 AgentMRI는 Langfuse 같은 observability 플랫폼을 대체하지 않는다. 그 위에서 **이 실행을 믿어도 되는지, 원래 PASS/FAIL 판정이 맞는지**를 감사하는 상위 계층을 목표로 한다.

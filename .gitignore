@@ -16,3 +16,5 @@ __pycache__
 tsconfig.tsbuildinfo
 output/
 .playwright-cli/
+
+.vercel
