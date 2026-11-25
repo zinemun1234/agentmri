@@ -1,7 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { compareTraces, type ComparisonRowStatus } from '@/lib/compare';
+import { compareTraces, type ComparisonRow, type ComparisonRowStatus } from '@/lib/compare';
+import { semanticDifferences, type FieldDifference } from '@/lib/compare/diff';
+import { buildRegressionCandidate } from '@/lib/regression';
 import type { CanonicalTrace } from '@/lib/types';
 
 export interface CompareSource {
@@ -22,6 +24,13 @@ const statusLabels: Record<ComparisonRowStatus, string> = {
   changed: 'changed',
   added: 'added',
   removed: 'removed'
+};
+
+const roleLabels: Record<string, string> = {
+  origin: 'origin — 첫 divergence',
+  propagated: 'propagated — 값 전파',
+  detected: 'detected — verification 감지',
+  outcome: 'outcome — 최종 결과'
 };
 
 function formatDuration(ms?: number): string {
@@ -48,6 +57,23 @@ function formatSignedCount(count: number): string {
   return count > 0 ? `+${count}` : `${count}`;
 }
 
+function formatValue(value: unknown): string {
+  if (value === undefined) return '—';
+  if (typeof value === 'string') return value.length > 80 ? `${value.slice(0, 80)}…` : value;
+  const serialized = JSON.stringify(value);
+  if (!serialized) return String(value);
+  return serialized.length > 80 ? `${serialized.slice(0, 80)}…` : serialized;
+}
+
+const kindLabels: Record<FieldDifference['kind'], string> = {
+  value_changed: '변경',
+  field_added: '추가됨',
+  field_removed: '제거됨',
+  array_item_added: '항목 추가',
+  array_item_removed: '항목 제거',
+  array_item_changed: '항목 변경'
+};
+
 export default function TraceCompare({
   sources,
   defaultBaselineKey,
@@ -56,10 +82,23 @@ export default function TraceCompare({
 }: TraceCompareProps) {
   const [baselineKey, setBaselineKey] = useState(defaultBaselineKey);
   const [candidateKey, setCandidateKey] = useState(defaultCandidateKey);
+  const [selectedRowId, setSelectedRowId] = useState<string | undefined>(undefined);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const baseline = sources.find((source) => source.key === baselineKey) ?? sources[0];
   const candidate = sources.find((source) => source.key === candidateKey) ?? sources[1] ?? sources[0];
   const comparison = useMemo(() => compareTraces(baseline.trace, candidate.trace), [baseline, candidate]);
   const changedCount = comparison.rows.filter((row) => row.status !== 'same').length;
+
+  const selectedRow: ComparisonRow | undefined =
+    comparison.rows.find((row) => row.row_id === selectedRowId && row.status !== 'same') ??
+    comparison.rows.find((row) => row.row_id === comparison.first_divergence?.row_id);
+  const selectedDiffs = selectedRow ? semanticDifferences(selectedRow.field_differences) : [];
+
+  const regression = useMemo(
+    () => buildRegressionCandidate(comparison, baseline.trace, candidate.trace),
+    [comparison, baseline, candidate]
+  );
+  const regressionJson = useMemo(() => (regression ? JSON.stringify(regression, null, 2) : ''), [regression]);
 
   function spanButton(source: CompareSource, spanId?: string, label?: string) {
     if (!spanId || !label) return <span className="missing-step">—</span>;
@@ -68,6 +107,27 @@ export default function TraceCompare({
         {label}
       </button>
     );
+  }
+
+  async function copyRegression() {
+    try {
+      await navigator.clipboard.writeText(regressionJson);
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
+    setTimeout(() => setCopyState('idle'), 2000);
+  }
+
+  function downloadRegression() {
+    if (!regression) return;
+    const blob = new Blob([regressionJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${regression.candidate_id}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -133,7 +193,9 @@ export default function TraceCompare({
 
       {comparison.first_divergence ? (
         <div className={`divergence-card ${comparison.first_divergence.status}`}>
-          <span>first divergence 후보</span>
+          <span>
+            first divergence 후보 · {comparison.first_divergence.type} · confidence {comparison.first_divergence.confidence}
+          </span>
           <strong>{comparison.first_divergence.summary}</strong>
           <div className="divergence-links">
             {spanButton(baseline, comparison.first_divergence.baseline_span_id, 'baseline step 열기')}
@@ -147,6 +209,63 @@ export default function TraceCompare({
         </div>
       )}
 
+      {selectedDiffs.length > 0 ? (
+        <div className="field-diff" aria-label="field diff viewer">
+          <div className="field-diff-head">
+            <h3>field-level diff</h3>
+            <span>
+              {selectedRow?.baseline_step_key ?? selectedRow?.candidate_step_key} · semantic diff {selectedDiffs.length}건
+            </span>
+          </div>
+          <div className="field-diff-table" role="table" aria-label="field differences">
+            <div className="field-diff-row field-diff-header" role="row">
+              <span>field path</span>
+              <span>baseline</span>
+              <span>candidate</span>
+            </div>
+            {selectedDiffs.slice(0, 12).map((difference) => (
+              <div key={`${difference.path}-${difference.kind}`} className={`field-diff-row ${difference.kind}`} role="row">
+                <div className="field-path">
+                  <code>{difference.path}</code>
+                  <small>{kindLabels[difference.kind]}</small>
+                </div>
+                <div className="field-value baseline">{formatValue(difference.baseline_value)}</div>
+                <div className="field-value candidate">{formatValue(difference.candidate_value)}</div>
+              </div>
+            ))}
+          </div>
+          {selectedDiffs.length > 12 ? <p className="field-diff-more">외 {selectedDiffs.length - 12}개 필드 차이</p> : null}
+        </div>
+      ) : null}
+
+      {comparison.propagation_chain ? (
+        <div className="propagation-chain" aria-label="propagation chain">
+          <div className="field-diff-head">
+            <h3>propagation chain</h3>
+            <span>confidence {comparison.propagation_chain.confidence}</span>
+          </div>
+          <ol>
+            {comparison.propagation_chain.nodes.map((node) => (
+              <li key={`${node.span_id}-${node.role}`} className={`chain-node ${node.role}`}>
+                <div className="chain-node-head">
+                  <strong>{node.step_label}</strong>
+                  <span>{roleLabels[node.role] ?? node.role}</span>
+                </div>
+                <p>{node.evidence}</p>
+                <div className="chain-node-foot">
+                  {node.field_paths.slice(0, 3).map((path) => (
+                    <code key={path}>{path}</code>
+                  ))}
+                  <button type="button" onClick={() => onInspectSpan(candidate.trace, candidate.label, node.span_id)} title={node.span_id}>
+                    evidence 열기
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+
       <div className="compare-table" role="table" aria-label="step alignment">
         <div className="compare-row compare-head" role="row">
           <span>#</span>
@@ -155,7 +274,12 @@ export default function TraceCompare({
           <span>status</span>
         </div>
         {comparison.rows.map((row, index) => (
-          <div key={row.row_id} className={`compare-row ${row.status}`} role="row">
+          <div
+            key={row.row_id}
+            className={`compare-row ${row.status} ${row.row_id === selectedRow?.row_id && row.status !== 'same' ? 'selected' : ''}`}
+            role="row"
+            onClick={() => row.status !== 'same' && setSelectedRowId(row.row_id)}
+          >
             <span>{index + 1}</span>
             <div>{spanButton(baseline, row.baseline_span?.span_id, row.baseline_step_key)}</div>
             <div>{spanButton(candidate, row.candidate_span?.span_id, row.candidate_step_key)}</div>
@@ -166,6 +290,45 @@ export default function TraceCompare({
           </div>
         ))}
       </div>
+
+      {regression ? (
+        <div className="regression-export" aria-label="regression export">
+          <div className="field-diff-head">
+            <h3>regression test 후보</h3>
+            <span>
+              confidence {regression.confidence} · evidence {regression.evidence_span_ids.length}개
+            </span>
+          </div>
+          <p className="regression-title">{regression.title}</p>
+          <div className="regression-gwt">
+            <p>
+              <strong>given</strong> {regression.given}
+            </p>
+            <p>
+              <strong>when</strong> {regression.when}
+            </p>
+            <ul>
+              {regression.then.map((item) => (
+                <li key={item}>
+                  <strong>then</strong> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="regression-actions">
+            <button type="button" onClick={copyRegression}>
+              {copyState === 'copied' ? '복사됨 ✓' : copyState === 'failed' ? '복사 실패' : 'JSON 복사'}
+            </button>
+            <button type="button" onClick={downloadRegression}>
+              JSON 다운로드
+            </button>
+          </div>
+          <details className="regression-json">
+            <summary>JSON 미리보기</summary>
+            <pre>{regressionJson}</pre>
+          </details>
+        </div>
+      ) : null}
     </section>
   );
 }
