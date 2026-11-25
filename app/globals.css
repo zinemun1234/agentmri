@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 :root {
   color-scheme: dark;
   --bg: #090b10;
@@ -1256,4 +1258,191 @@ h1 {
   padding: 12px;
   font-size: 0.72rem;
   line-height: 1.5;
+}
+
+/* ============================================
+   UI Upgrade v1 — Linear × Datadog direction
+   semantic tokens, elevation, typography,
+   verdict hero, diff colors, chain connectors
+   ============================================ */
+
+:root {
+  --pass: #34d399;
+  --fail: #f87171;
+  --suspect: #fbbf24;
+  --info: #60a5fa;
+  --elevation-0: #0a0e16;
+  --elevation-1: #10151f;
+  --elevation-2: #161d2b;
+  --elevation-3: #1d2637;
+  --font-ui: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--elevation-0);
+  letter-spacing: -0.01em;
+}
+
+code, pre, .field-path code, .chain-node-foot code, .json-block {
+  font-family: var(--font-mono);
+}
+
+/* --- elevation over borders --- */
+.panel {
+  background: var(--elevation-1);
+  border-color: transparent;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.25);
+}
+.summary-card, .audit-metric, .audit-rationale, .audit-signals,
+.chain-node, .field-diff-table, .compare-controls select,
+.chain-node-foot code, .regression-json pre {
+  background: var(--elevation-2);
+  border-color: rgba(255,255,255,0.05);
+}
+.audit-body .audit-metric {
+  background: var(--elevation-2);
+}
+
+/* --- metric strip compression --- */
+.summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.summary-grid .summary-card {
+  flex: 1 1 0;
+  min-width: 100px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-radius: 8px;
+}
+.summary-grid .summary-card span {
+  font-size: 0.62rem;
+}
+.summary-grid .summary-card strong {
+  font-size: 0.95rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* --- verdict hero stamp --- */
+.audit-main-verdict {
+  padding: 20px 18px !important;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.audit-main-verdict strong, .audit-main-verdict .verdict-label {
+  font-size: 1.5rem !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.audit-main-verdict .true_pass, .audit-main-verdict [class*="pass"] {
+  color: var(--pass);
+}
+
+/* semantic status colors */
+.tone-good, .status-ok { color: var(--pass); }
+.tone-bad, .status-error { color: var(--fail); }
+.tone-warning { color: var(--suspect); }
+
+/* --- real diff highlighting --- */
+.field-diff-row .field-value.baseline {
+  background: rgba(248, 113, 113, 0.10);
+  border-left: 2px solid rgba(248, 113, 113, 0.55);
+  color: #fca5a5;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+.field-diff-row .field-value.candidate {
+  background: rgba(52, 211, 153, 0.10);
+  border-left: 2px solid rgba(52, 211, 153, 0.55);
+  color: #6ee7b7;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+.field-diff-row.field_added .field-value.candidate,
+.field-diff-row.array_item_added .field-value.candidate {
+  color: #6ee7b7;
+}
+
+/* --- propagation chain connectors --- */
+.propagation-chain ol {
+  position: relative;
+  padding-left: 18px;
+}
+.propagation-chain ol::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 24px;
+  bottom: 24px;
+  width: 2px;
+  background: linear-gradient(180deg, #f0abfc 0%, #60a5fa 40%, #fbbf24 75%, #f87171 100%);
+  opacity: 0.45;
+  border-radius: 2px;
+}
+.chain-node {
+  position: relative;
+  margin-left: 6px;
+}
+.chain-node::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 18px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--elevation-1);
+  border: 2px solid var(--border);
+  z-index: 1;
+}
+.chain-node.origin::before { border-color: #f0abfc; }
+.chain-node.propagated::before { border-color: #60a5fa; }
+.chain-node.detected::before { border-color: #fbbf24; }
+.chain-node.outcome::before { border-color: #f87171; }
+
+/* --- fixture pills quieter, active louder --- */
+.sample-buttons button {
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+/* --- micro-interactions --- */
+button {
+  transition: border-color 150ms ease, background 150ms ease, transform 100ms ease;
+}
+button:hover {
+  transform: translateY(-1px);
+}
+button:active {
+  transform: translateY(0);
+}
+.compare-row[role="row"]:not(.compare-head) {
+  transition: background 150ms ease;
+}
+.compare-row[role="row"]:not(.compare-head):hover {
+  background: rgba(96, 165, 250, 0.05);
+}
+
+/* --- divergence card accent --- */
+.divergence-card {
+  border-left: 3px solid var(--suspect);
+  border-radius: 10px;
+}
+.divergence-card.same {
+  border-left-color: var(--pass);
+}
+
+/* --- eyebrow/hero typography --- */
+.eyebrow {
+  letter-spacing: 0.14em;
 }
