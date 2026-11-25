@@ -127,3 +127,65 @@ describe('evidence validation', () => {
     expect(result.missing_span_ids).toEqual([]);
   });
 });
+
+describe('compare-aware audit (Phase D)', () => {
+  it('wrong-time true failure는 비교 divergence 확인으로 confidence high가 된다', async () => {
+    const { compareTraces } = await import('../lib/compare');
+    const comparison = compareTraces(successfulTrace, wrongTimeTrace);
+    const findings = runDetectors(wrongTimeTrace);
+    const audit = auditVerdict(wrongTimeTrace, findings, { comparison });
+
+    expect(audit.audited_verdict).toBe('true_failure');
+    expect(audit.audit_confidence).toBe('high');
+    expect(audit.rationale).toContain('semantic divergence');
+    expect(audit.signals.some((signal) => signal.startsWith('compare:'))).toBe(true);
+    expect(audit.evidence_validation.ok).toBe(true);
+  });
+
+  it('FAIL인데 golden과 divergence가 없으면 false negative confidence가 high가 된다', async () => {
+    const { compareTraces } = await import('../lib/compare');
+    const clone = JSON.parse(JSON.stringify(successfulCalendarJson)) as CanonicalTrace;
+    clone.trace_id = 'clone-fail-verdict';
+    clone.evaluation = { ...clone.evaluation, verdict: 'fail' } as CanonicalTrace['evaluation'];
+    const comparison = compareTraces(successfulTrace, clone);
+    const findings = runDetectors(clone);
+    const audit = auditVerdict(clone, findings, { comparison });
+
+    expect(comparison.rows.every((row) => row.status === 'same')).toBe(true);
+    expect(audit.audited_verdict).toBe('evaluator_false_negative_suspected');
+    expect(audit.audit_confidence).toBe('high');
+    expect(audit.rationale).toContain('golden');
+  });
+
+  it('PASS인데 baseline verification이 사라졌으면 false positive로 재분류한다', async () => {
+    const { compareTraces } = await import('../lib/compare');
+    const clone = JSON.parse(JSON.stringify(successfulCalendarJson)) as CanonicalTrace;
+    clone.trace_id = 'clone-no-verification';
+    clone.spans = clone.spans.filter((span) => span.type !== 'verification');
+    const comparison = compareTraces(successfulTrace, clone);
+    const findings = runDetectors(clone);
+    const audit = auditVerdict(clone, findings, { comparison });
+
+    expect(audit.original_verdict).toBe('pass');
+    expect(audit.audited_verdict).toBe('evaluator_false_positive_suspected');
+    expect(audit.signals.some((signal) => signal.includes('verification step') && signal.includes('사라짐'))).toBe(true);
+    expect(audit.evidence_validation.ok).toBe(true);
+  });
+
+  it('comparison이 없으면 기존 동작이 유지된다', () => {
+    const findings = runDetectors(successfulTrace);
+    const audit = auditVerdict(successfulTrace, findings);
+
+    expect(audit.audited_verdict).toBe('true_pass');
+    expect(audit.signals.some((signal) => signal.startsWith('compare:'))).toBe(false);
+  });
+
+  it('comparison evidence가 실제 span id만 참조한다', async () => {
+    const { compareTraces } = await import('../lib/compare');
+    const comparison = compareTraces(successfulTrace, wrongTimeTrace);
+    const findings = runDetectors(wrongTimeTrace);
+    const audit = auditVerdict(wrongTimeTrace, findings, { comparison });
+
+    expect(audit.evidence_validation.missing_span_ids).toEqual([]);
+  });
+});

@@ -1827,3 +1827,96 @@ button:active {
 .regression-export {
   border-top: 1px solid rgba(255,255,255,0.05);
 }
+
+/* ============================================
+   Charts — metric paired bars + duration comparison
+   ============================================ */
+.metric-bars {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.metric-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+.metric-bar.baseline {
+  background: rgba(96, 165, 250, 0.55);
+}
+.metric-bar.candidate {
+  background: rgba(251, 191, 36, 0.55);
+}
+
+.duration-chart {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+}
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+.legend-dot.baseline { background: rgba(96, 165, 250, 0.7); }
+.legend-dot.candidate { background: rgba(251, 191, 36, 0.7); }
+
+.duration-chart-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.duration-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr 64px;
+  gap: 10px;
+  align-items: center;
+}
+.duration-label {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.duration-row.changed .duration-label {
+  color: var(--suspect);
+}
+.duration-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.duration-bar-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.duration-bar {
+  height: 6px;
+  border-radius: 3px;
+  transition: width 300ms ease;
+}
+.duration-bar.baseline {
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.35), rgba(96, 165, 250, 0.7));
+}
+.duration-bar.candidate {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.35), rgba(251, 191, 36, 0.7));
+}
+.duration-bar-line small {
+  font-size: 0.62rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.duration-delta {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-align: right;
+}
+.duration-delta.worse { color: var(--fail); }
+.duration-delta.better { color: var(--pass); }

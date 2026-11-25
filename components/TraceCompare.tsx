@@ -58,6 +58,21 @@ function formatSignedCount(count: number): string {
   return count > 0 ? `+${count}` : `${count}`;
 }
 
+function spanDurationMs(span?: { started_at: string; ended_at?: string }): number | undefined {
+  if (!span?.ended_at) return undefined;
+  return Date.parse(span.ended_at) - Date.parse(span.started_at);
+}
+
+function MetricBar({ baseline, candidate, max }: { baseline: number; candidate: number; max: number }) {
+  const scale = max > 0 ? max : 1;
+  return (
+    <div className="metric-bars" aria-hidden="true">
+      <div className="metric-bar baseline" style={{ width: `${Math.max(2, (baseline / scale) * 100)}%` }} />
+      <div className="metric-bar candidate" style={{ width: `${Math.max(2, (candidate / scale) * 100)}%` }} />
+    </div>
+  );
+}
+
 function formatValue(value: unknown): string {
   if (value === undefined) return '—';
   if (typeof value === 'string') return value.length > 80 ? `${value.slice(0, 80)}…` : value;
@@ -94,6 +109,20 @@ export default function TraceCompare({
     comparison.rows.find((row) => row.row_id === selectedRowId && row.status !== 'same') ??
     comparison.rows.find((row) => row.row_id === comparison.first_divergence?.row_id);
   const selectedDiffs = selectedRow ? semanticDifferences(selectedRow.field_differences) : [];
+
+  const durationRows = useMemo(() => {
+    const rows = comparison.rows
+      .map((row) => ({
+        key: row.row_id,
+        label: row.candidate_step_key ?? row.baseline_step_key ?? 'unknown',
+        baselineMs: spanDurationMs(row.baseline_span),
+        candidateMs: spanDurationMs(row.candidate_span),
+        status: row.status
+      }))
+      .filter((row) => row.baselineMs !== undefined || row.candidateMs !== undefined);
+    const maxMs = rows.reduce((max, row) => Math.max(max, row.baselineMs ?? 0, row.candidateMs ?? 0), 0);
+    return { rows, maxMs };
+  }, [comparison]);
 
   const regression = useMemo(
     () => buildRegressionCandidate(comparison, baseline.trace, candidate.trace),
@@ -168,6 +197,11 @@ export default function TraceCompare({
             {formatDuration(comparison.baseline_metrics.duration_ms)} → {formatDuration(comparison.candidate_metrics.duration_ms)}
           </strong>
           <small>{formatSignedDuration(comparison.metric_deltas.duration_ms)}</small>
+          <MetricBar
+            baseline={comparison.baseline_metrics.duration_ms ?? 0}
+            candidate={comparison.candidate_metrics.duration_ms ?? 0}
+            max={Math.max(comparison.baseline_metrics.duration_ms ?? 0, comparison.candidate_metrics.duration_ms ?? 0)}
+          />
         </div>
         <div>
           <span>cost</span>
@@ -175,6 +209,11 @@ export default function TraceCompare({
             {formatCost(comparison.baseline_metrics.cost_usd)} → {formatCost(comparison.candidate_metrics.cost_usd)}
           </strong>
           <small>{formatSignedCost(comparison.metric_deltas.cost_usd)}</small>
+          <MetricBar
+            baseline={comparison.baseline_metrics.cost_usd}
+            candidate={comparison.candidate_metrics.cost_usd}
+            max={Math.max(comparison.baseline_metrics.cost_usd, comparison.candidate_metrics.cost_usd)}
+          />
         </div>
         <div>
           <span>tool calls</span>
@@ -182,6 +221,11 @@ export default function TraceCompare({
             {comparison.baseline_metrics.tool_call_count} → {comparison.candidate_metrics.tool_call_count}
           </strong>
           <small>{formatSignedCount(comparison.metric_deltas.tool_call_count)}</small>
+          <MetricBar
+            baseline={comparison.baseline_metrics.tool_call_count}
+            candidate={comparison.candidate_metrics.tool_call_count}
+            max={Math.max(comparison.baseline_metrics.tool_call_count, comparison.candidate_metrics.tool_call_count, 1)}
+          />
         </div>
         <div>
           <span>errors</span>
@@ -189,6 +233,11 @@ export default function TraceCompare({
             {comparison.baseline_metrics.error_span_count} → {comparison.candidate_metrics.error_span_count}
           </strong>
           <small>{formatSignedCount(comparison.metric_deltas.error_span_count)}</small>
+          <MetricBar
+            baseline={comparison.baseline_metrics.error_span_count}
+            candidate={comparison.candidate_metrics.error_span_count}
+            max={Math.max(comparison.baseline_metrics.error_span_count, comparison.candidate_metrics.error_span_count, 1)}
+          />
         </div>
       </div>
 
@@ -291,6 +340,43 @@ export default function TraceCompare({
           </div>
         ))}
       </div>
+
+      {durationRows.rows.length > 0 ? (
+        <div className="duration-chart" aria-label="step duration comparison">
+          <div className="field-diff-head">
+            <h3>step duration 비교</h3>
+            <span>
+              <i className="legend-dot baseline" /> baseline · <i className="legend-dot candidate" /> candidate
+            </span>
+          </div>
+          <div className="duration-chart-rows">
+            {durationRows.rows.slice(0, 12).map((row) => {
+              const scale = durationRows.maxMs > 0 ? durationRows.maxMs : 1;
+              const delta = (row.candidateMs ?? 0) - (row.baselineMs ?? 0);
+              return (
+                <div key={row.key} className={`duration-row ${row.status}`}>
+                  <span className="duration-label" title={row.label}>
+                    {row.label}
+                  </span>
+                  <div className="duration-bars">
+                    <div className="duration-bar-line">
+                      <div className="duration-bar baseline" style={{ width: `${Math.max(1.5, ((row.baselineMs ?? 0) / scale) * 100)}%` }} />
+                      <small>{row.baselineMs !== undefined ? `${(row.baselineMs / 1000).toFixed(1)}s` : '—'}</small>
+                    </div>
+                    <div className="duration-bar-line">
+                      <div className="duration-bar candidate" style={{ width: `${Math.max(1.5, ((row.candidateMs ?? 0) / scale) * 100)}%` }} />
+                      <small>{row.candidateMs !== undefined ? `${(row.candidateMs / 1000).toFixed(1)}s` : '—'}</small>
+                    </div>
+                  </div>
+                  <span className={`duration-delta ${delta > 500 ? 'worse' : delta < -500 ? 'better' : ''}`}>
+                    {delta === 0 ? '±0' : `${delta > 0 ? '+' : ''}${(delta / 1000).toFixed(1)}s`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       {regression ? (
         <div className="regression-export" aria-label="regression export">

@@ -10,6 +10,7 @@ import retrievalWithoutEvidenceJson from '@/fixtures/retrieval-without-evidence.
 import successfulCalendarJson from '@/fixtures/successful-calendar.json';
 import unverifiedExternalActionJson from '@/fixtures/unverified-external-action.json';
 import { auditVerdict } from '@/lib/audit';
+import { compareTraces } from '@/lib/compare';
 import { runDetectors } from '@/lib/detectors';
 import type { CanonicalTrace, ValidationIssue } from '@/lib/types';
 import { parseAndValidateTrace } from '@/lib/validate';
@@ -104,7 +105,14 @@ export default function TraceExplorer() {
   const [sourceLabel, setSourceLabel] = useState(samples[0].label);
 
   const findings = useMemo(() => runDetectors(trace), [trace]);
-  const verdictAudit = useMemo(() => auditVerdict(trace, findings), [trace, findings]);
+  const goldenTrace = samples[0].trace;
+  const auditComparison = useMemo(() => {
+    if (trace.trace_id === goldenTrace.trace_id) return undefined;
+    const normalize = (value?: string) => (value ?? '').replace(/\s+/g, ' ').trim();
+    if (normalize(trace.task?.instruction) !== normalize(goldenTrace.task?.instruction)) return undefined;
+    return compareTraces(goldenTrace, trace);
+  }, [trace, goldenTrace]);
+  const verdictAudit = useMemo(() => auditVerdict(trace, findings, { comparison: auditComparison }), [trace, findings, auditComparison]);
   const spanById = useMemo(() => new Map(trace.spans.map((span) => [span.span_id, span])), [trace]);
   const selectedSpan = selectedSpanId ? spanById.get(selectedSpanId) : undefined;
   const toolCount = trace.spans.filter((span) => span.type === 'tool').length;
