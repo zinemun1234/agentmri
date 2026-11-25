@@ -18,6 +18,7 @@ import { compareTraces } from '@/lib/compare';
 import { runDetectors } from '@/lib/detectors';
 import type { CanonicalTrace, ValidationIssue } from '@/lib/types';
 import { parseAndValidateTrace } from '@/lib/validate';
+import { adaptTrace } from '@/lib/adapters';
 import AuditReport from './AuditReport';
 import MultiRunPanel from './MultiRunPanel';
 import { IconAlert, IconClock, IconCoin, IconLayers, IconPulse, IconWrench } from './icons';
@@ -141,12 +142,23 @@ export default function TraceExplorer() {
   }
 
   function applyJson(text: string, label: string) {
-    const result = parseAndValidateTrace(text);
+    let source = text;
+    let adaptedFormat = '';
+    try {
+      const adaptation = adaptTrace(JSON.parse(text));
+      if (adaptation.trace && adaptation.format !== 'canonical') {
+        source = JSON.stringify(adaptation.trace);
+        adaptedFormat = adaptation.format;
+      }
+    } catch {
+      // JSON 파싱 실패는 parseAndValidateTrace가 보고한다
+    }
+    const result = parseAndValidateTrace(source);
     setIssues(result.issues);
     if (result.ok && result.trace) {
       setTrace(result.trace);
       setSelectedSpanId(result.trace.spans[0]?.span_id ?? '');
-      setSourceLabel(label);
+      setSourceLabel(adaptedFormat ? `${label} (${adaptedFormat} 변환)` : label);
     }
   }
 

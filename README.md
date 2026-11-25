@@ -51,6 +51,7 @@ task fingerprint로 묶인 실행 그룹에서 golden을 자동 선정하고, ru
 - propagation chain — divergence가 downstream으로 퍼지는 evidence 경로 추적
 - regression test 후보 자동 생성 — given/when/then + assertion DSL, JSON 복사/다운로드
 - **regression candidate → 실행 가능한 pytest 컴파일** — standalone 파일 다운로드, golden에서는 통과하고 regression에서는 실패 (표준 라이브러리만 사용)
+- **외부 포맷 자동 변환** — OTLP(resourceSpans), LangSmith run export(run_type/child_runs), Langfuse(observations) JSON을 붙여넣거나 업로드하면 canonical trace로 자동 변환. gen_ai 시맨틱 컨벤션, usage/cost, 에러 상태, 계층 구조 매핑
 - **CI audit gate** — `npx tsx scripts/agentmri-audit.ts`로 high/critical finding, verdict 재분류, verification 소실 시 exit 1. GitHub Actions 요약 출력 지원
 - compare-aware audit — 비교 evidence를 verdict 판정 신뢰도 계산에 융합 (verification 소실 시 false positive 재분류, golden과 동일한데 FAIL이면 false negative 근거 강화)
 
